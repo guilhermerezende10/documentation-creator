@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { FileInput } from './components/FileInput';
 import { ClarificationForm } from './components/ClarificationForm';
 import { ProgressBar } from './components/ProgressBar';
@@ -14,18 +14,6 @@ function App() {
   const { progress, questions, doc, isLoading, startGeneration, submitAnswers, reset } =
     useDocGenerator();
 
-  useEffect(() => {
-    if (phase === 'running' && !doc && questions.length > 0) {
-      setPhase('clarification');
-    }
-  }, [phase, questions, doc]);
-
-  useEffect(() => {
-    if (phase === 'running' && doc) {
-      setPhase('output');
-    }
-  }, [phase, doc]);
-
   const handleInputSubmit = async (data: InputData) => {
     if (isLoading) return;
     setError(null);
@@ -40,11 +28,13 @@ function App() {
   const handleAnswersSubmit = async (answers: ClarificationAnswer[]) => {
     if (isLoading) return;
     setError(null);
+    setPhase('running');
     try {
       await submitAnswers(answers);
       setPhase('output');
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
+      setPhase('clarification');
     }
   };
 
