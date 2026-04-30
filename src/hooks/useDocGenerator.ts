@@ -1,10 +1,14 @@
+import { useState } from 'react';
 import type {
   ClarificationAnswer,
   ClarificationQuestion,
   GeneratedDoc,
   InputData,
+  LLMConfig,
   Progress,
 } from '../types';
+import { callLLM } from '../services/llmService';
+import { buildClarificationPrompt, buildDocPrompt } from '../utils/promptBuilder';
 
 export interface UseDocGeneratorResult {
   progress: Progress | null;
@@ -15,6 +19,95 @@ export interface UseDocGeneratorResult {
   reset: () => void;
 }
 
+function getConfig(): LLMConfig {
+  return {
+    provider: import.meta.env.VITE_LLM_PROVIDER || 'ollama',
+    ollamaModel: import.meta.env.VITE_OLLAMA_MODEL,
+    claudeApiKey: import.meta.env.VITE_CLAUDE_API_KEY,
+  };
+}
+
+async function fetchUrlAsText(url: string): Promise<string> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Failed to fetch ' + url + ': ' + res.status);
+  return await res.text();
+}
+
+function parseQuestions(raw: string): ClarificationQuestion[] {
+  const match = raw.match(/\[[\s\S]*\]/);
+  if (!match) throw new Error('LLM did not return a JSON array of questions');
+  const parsed = JSON.parse(match[0]) as Array<{ id?: string; question: string }>;
+  return parsed.map((q, i) => ({
+    id: q.id || 'q' + (i + 1),
+    question: q.question,
+  }));
+}
+
+function parseDoc(markdown: string): GeneratedDoc {
+  const lines = markdown.split('\n');
+  const sections: { title: string; content: string }[] = [];
+  let current: { title: string; content: string } | null = null;
+  for (const line of lines) {
+    const m = line.match(/^##\s+(.+)$/);
+    if (m) {
+      if (current) sections.push(current);
+      current = { title: m[1], content: '' };
+    } else if (current) {
+      current.content += line + '\n';
+    }
+  }
+  if (current) sections.push(current);
+  return {
+    sections: sections.map(s => ({ title: s.title, content: s.content.trim() })),
+    markdown,
+  };
+}
+
 export function useDocGenerator(): UseDocGeneratorResult {
-  throw new Error('useDocGenerator not implemented');
+  const [progress, setProgress] = useState<Progress | null>(null);
+  const [questions, setQuestions] = useState<ClarificationQuestion[]>([]);
+  const [doc, setDoc] = useState<GeneratedDoc | null>(null);
+  const [pendingInput, setPendingInput] = useState<InputData | null>(null);
+
+  async function startGeneration(data: InputData) {
+    setProgress({ step: 'Loading source', percent: 10 });
+    setQuestions([]);
+    setDoc(null);
+
+    let resolved = data;
+    if (data.mode === 'link') {
+      if (!data.url) throw new Error('URL is required for link mode');
+      const code = await fetchUrlAsText(data.url);
+      resolved = { ...data, code };
+    } else if (!data.code) {
+      throw new Error('Code is required for paste mode');
+    }
+
+    setPendingInput(resolved);
+    setProgress({ step: 'Analyzing code', percent: 35 });
+
+    const prompt = buildClarificationPrompt(resolved);
+    const raw = await callLLM(prompt, getConfig());
+    setQuestions(parseQuestions(raw));
+    setProgress({ step: 'Awaiting clarifications', percent: 50 });
+  }
+
+  async function submitAnswers(answers: ClarificationAnswer[]) {
+    if (!pendingInput) throw new Error('No input data; call startGeneration first');
+    setProgress({ step: 'Generating documentation', percent: 70 });
+    const prompt = buildDocPrompt(pendingInput, answers);
+    const raw = await callLLM(prompt, getConfig());
+    setProgress({ step: 'Formatting output', percent: 90 });
+    setDoc(parseDoc(raw));
+    setProgress({ step: 'Done', percent: 100 });
+  }
+
+  function reset() {
+    setProgress(null);
+    setQuestions([]);
+    setDoc(null);
+    setPendingInput(null);
+  }
+
+  return { progress, questions, doc, startGeneration, submitAnswers, reset };
 }
