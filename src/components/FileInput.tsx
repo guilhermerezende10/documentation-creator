@@ -4,7 +4,7 @@ import type { FileInputProps, InputMode } from '../types';
 
 const GITHUB_URL = /^https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/?$/i;
 
-export function FileInput({ onSubmit }: FileInputProps) {
+export function FileInput({ onSubmit, isLoading = false }: FileInputProps) {
   const [tab, setTab] = useState<InputMode>('paste');
   const [code, setCode] = useState('');
   const [url, setUrl] = useState('');
@@ -45,7 +45,7 @@ export function FileInput({ onSubmit }: FileInputProps) {
   };
 
   const handleSubmit = () => {
-    if (!ready) return;
+    if (!ready || isLoading) return;
     if (tab === 'paste') {
       onSubmit({ mode: 'paste', code: code.trim() });
     } else {
@@ -159,10 +159,18 @@ export function FileInput({ onSubmit }: FileInputProps) {
       <button
         type="button"
         className="cta"
-        disabled={!ready}
+        disabled={!ready || isLoading}
         onClick={handleSubmit}
+        aria-busy={isLoading}
       >
-        ANALYZE → CONTINUE
+        {isLoading ? (
+          <>
+            <span className="spinner" aria-hidden="true" />
+            ANALYZING…
+          </>
+        ) : (
+          'ANALYZE → CONTINUE'
+        )}
       </button>
 
       <div className="micro">

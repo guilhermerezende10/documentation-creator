@@ -14,6 +14,7 @@ export interface UseDocGeneratorResult {
   progress: Progress | null;
   questions: ClarificationQuestion[];
   doc: GeneratedDoc | null;
+  isLoading: boolean;
   startGeneration: (data: InputData) => Promise<void>;
   submitAnswers: (answers: ClarificationAnswer[]) => Promise<void>;
   reset: () => void;
@@ -68,38 +69,49 @@ export function useDocGenerator(): UseDocGeneratorResult {
   const [questions, setQuestions] = useState<ClarificationQuestion[]>([]);
   const [doc, setDoc] = useState<GeneratedDoc | null>(null);
   const [pendingInput, setPendingInput] = useState<InputData | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   async function startGeneration(data: InputData) {
-    setProgress({ step: 'Loading source', percent: 10 });
-    setQuestions([]);
-    setDoc(null);
+    try {
+      setIsLoading(true);
+      setProgress({ step: 'Loading source', percent: 10 });
+      setQuestions([]);
+      setDoc(null);
 
-    let resolved = data;
-    if (data.mode === 'link') {
-      if (!data.url) throw new Error('URL is required for link mode');
-      const code = await fetchUrlAsText(data.url);
-      resolved = { ...data, code };
-    } else if (!data.code) {
-      throw new Error('Code is required for paste mode');
+      let resolved = data;
+      if (data.mode === 'link') {
+        if (!data.url) throw new Error('URL is required for link mode');
+        const code = await fetchUrlAsText(data.url);
+        resolved = { ...data, code };
+      } else if (!data.code) {
+        throw new Error('Code is required for paste mode');
+      }
+
+      setPendingInput(resolved);
+      setProgress({ step: 'Analyzing code', percent: 35 });
+
+      const prompt = buildClarificationPrompt(resolved);
+      const raw = await callLLM(prompt, getConfig());
+      setQuestions(parseQuestions(raw));
+      setProgress({ step: 'Awaiting clarifications', percent: 50 });
+    } finally {
+      setIsLoading(false);
     }
-
-    setPendingInput(resolved);
-    setProgress({ step: 'Analyzing code', percent: 35 });
-
-    const prompt = buildClarificationPrompt(resolved);
-    const raw = await callLLM(prompt, getConfig());
-    setQuestions(parseQuestions(raw));
-    setProgress({ step: 'Awaiting clarifications', percent: 50 });
   }
 
   async function submitAnswers(answers: ClarificationAnswer[]) {
     if (!pendingInput) throw new Error('No input data; call startGeneration first');
-    setProgress({ step: 'Generating documentation', percent: 70 });
-    const prompt = buildDocPrompt(pendingInput, answers);
-    const raw = await callLLM(prompt, getConfig());
-    setProgress({ step: 'Formatting output', percent: 90 });
-    setDoc(parseDoc(raw));
-    setProgress({ step: 'Done', percent: 100 });
+    try {
+      setIsLoading(true);
+      setProgress({ step: 'Generating documentation', percent: 70 });
+      const prompt = buildDocPrompt(pendingInput, answers);
+      const raw = await callLLM(prompt, getConfig());
+      setProgress({ step: 'Formatting output', percent: 90 });
+      setDoc(parseDoc(raw));
+      setProgress({ step: 'Done', percent: 100 });
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   function reset() {
@@ -107,7 +119,8 @@ export function useDocGenerator(): UseDocGeneratorResult {
     setQuestions([]);
     setDoc(null);
     setPendingInput(null);
+    setIsLoading(false);
   }
 
-  return { progress, questions, doc, startGeneration, submitAnswers, reset };
+  return { progress, questions, doc, isLoading, startGeneration, submitAnswers, reset };
 }

@@ -163,6 +163,14 @@ button{cursor:pointer}
 .cta:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 0 32px rgba(79,255,176,.32);filter:brightness(1.06)}
 .cta:disabled{background:var(--border);color:var(--text-muted);cursor:not-allowed}
 
+.spinner{
+  display:inline-block;width:12px;height:12px;
+  border:2px solid currentColor;border-right-color:transparent;
+  border-radius:50%;vertical-align:-2px;
+  animation:spin 720ms linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
 .micro{
   display:flex;gap:14px;justify-content:center;margin-top:14px;max-width:920px;
   font-size:11px;color:var(--text-muted);letter-spacing:.12em;text-transform:uppercase;
