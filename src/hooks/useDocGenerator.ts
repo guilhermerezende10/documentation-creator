@@ -24,6 +24,7 @@ function getConfig(): LLMConfig {
   return {
     provider: import.meta.env.VITE_LLM_PROVIDER || 'ollama',
     ollamaModel: import.meta.env.VITE_OLLAMA_MODEL,
+    ollamaBaseUrl: import.meta.env.VITE_OLLAMA_BASE_URL,
     claudeApiKey: import.meta.env.VITE_CLAUDE_API_KEY,
   };
 }

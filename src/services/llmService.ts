@@ -1,7 +1,8 @@
 import type { LLMConfig } from '../types';
 
-async function callOllama(prompt: string, model: string): Promise<string> {
-  const res = await fetch('http://localhost:11434/api/generate', {
+async function callOllama(prompt: string, model: string, baseUrl: string): Promise<string> {
+  const url = baseUrl.replace(/\/$/, '') + '/api/generate';
+  const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ model, prompt, stream: false }),
@@ -37,7 +38,11 @@ async function callClaude(prompt: string, apiKey: string): Promise<string> {
 
 export async function callLLM(prompt: string, config: LLMConfig): Promise<string> {
   if (config.provider === 'ollama') {
-    return callOllama(prompt, config.ollamaModel || 'llama3.1:8b');
+    return callOllama(
+      prompt,
+      config.ollamaModel || 'llama3.1:8b',
+      config.ollamaBaseUrl || 'http://localhost:11434',
+    );
   }
   if (config.provider === 'claude') {
     if (!config.claudeApiKey) throw new Error('Claude API key not provided');

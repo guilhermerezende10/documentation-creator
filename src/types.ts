@@ -5,6 +5,7 @@ export type LLMProvider = 'ollama' | 'claude';
 export interface LLMConfig {
   provider: LLMProvider;
   ollamaModel?: string;
+  ollamaBaseUrl?: string;
   claudeApiKey?: string;
 }
 
