@@ -1,40 +1,57 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FileInput } from './components/FileInput';
 import { ClarificationForm } from './components/ClarificationForm';
 import { ProgressBar } from './components/ProgressBar';
 import { DocOutput } from './components/DocOutput';
-import type {
-  Phase,
-  InputData,
-  ClarificationAnswer,
-  ClarificationQuestion,
-  GeneratedDoc,
-  Progress,
-} from './types';
+import { useDocGenerator } from './hooks/useDocGenerator';
+import type { Phase, InputData, ClarificationAnswer, Progress } from './types';
+
+const FALLBACK_PROGRESS: Progress = { step: 'Working', percent: 0 };
 
 function App() {
   const [phase, setPhase] = useState<Phase>('input');
-  const [, setInputData] = useState<InputData | null>(null);
-  const [questions] = useState<ClarificationQuestion[]>([]);
-  const [doc] = useState<GeneratedDoc | null>(null);
-  const [progress] = useState<Progress>({ step: 'API documentation', percent: 38 });
+  const [error, setError] = useState<string | null>(null);
+  const { progress, questions, doc, startGeneration, submitAnswers, reset } =
+    useDocGenerator();
 
-  const handleInputSubmit = (data: InputData) => {
-    setInputData(data);
-    setPhase('clarification');
-  };
+  useEffect(() => {
+    if (phase === 'running' && !doc && questions.length > 0) {
+      setPhase('clarification');
+    }
+  }, [phase, questions, doc]);
 
-  const handleAnswersSubmit = (_answers: ClarificationAnswer[]) => {
+  useEffect(() => {
+    if (phase === 'running' && doc) {
+      setPhase('output');
+    }
+  }, [phase, doc]);
+
+  const handleInputSubmit = async (data: InputData) => {
+    setError(null);
     setPhase('running');
+    try {
+      await startGeneration(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      setPhase('input');
+    }
   };
 
-  const handleRunComplete = () => {
-    setPhase('output');
+  const handleAnswersSubmit = async (answers: ClarificationAnswer[]) => {
+    setError(null);
+    setPhase('running');
+    try {
+      await submitAnswers(answers);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      setPhase('clarification');
+    }
   };
 
   const handleReset = () => {
+    reset();
+    setError(null);
     setPhase('input');
-    setInputData(null);
   };
 
   const handleBack = () => {
@@ -61,6 +78,22 @@ function App() {
 
       <div className="app">
         <main className="shell">
+          {error && (
+            <div
+              role="alert"
+              style={{
+                padding: '12px 16px',
+                marginBottom: 16,
+                border: '1px solid #c54',
+                color: '#f99',
+                background: 'rgba(200, 60, 60, 0.08)',
+                fontFamily: 'monospace',
+                fontSize: 13,
+              }}
+            >
+              ERROR — {error}
+            </div>
+          )}
           {phase === 'input' && <FileInput onSubmit={handleInputSubmit} />}
           {phase === 'clarification' && (
             <ClarificationForm
@@ -70,7 +103,7 @@ function App() {
             />
           )}
           {phase === 'running' && (
-            <ProgressBar progress={progress} onComplete={handleRunComplete} />
+            <ProgressBar progress={progress ?? FALLBACK_PROGRESS} />
           )}
           {phase === 'output' && <DocOutput doc={doc} onReset={handleReset} />}
         </main>

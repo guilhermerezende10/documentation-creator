@@ -1,22 +1,46 @@
 import { useState } from 'react';
-import type { ClarificationFormProps } from '../types';
+import type { ClarificationAnswer, ClarificationFormProps } from '../types';
 
-type Audience = 'developers' | 'maintainers' | 'end-users';
+const SAMPLE_ANSWERS: string[] = [
+  'Beginner Python students learning control flow and basic numeric algorithms. The docs should explain each menu option in plain language without assuming prior CS background.',
+  'menu-numerico — a small interactive CLI that lets the user pick from six classic numeric exercises (factorial, Fibonacci, digit reversal, geometric progression, palindrome check, digit sum) via a numbered menu.',
+  'No installation. Requires Python 3.7+. Run with "python menu_numerico.py". Standard library only — uses "time" for cosmetic delays between menu screens.',
+  'Six standalone functions exposed via the menu: calcular_fatorial, gerar_fibonacci, inverter_digitos, progressao_geometrica, verificar_palindromo, soma_digitos. All take input from stdin interactively — no parameters, no return values. main() is the entry loop; exibe_menu() prints the option list.',
+  'Inputs are not validated for negative numbers (factorial and palindrome silently misbehave for non-positive input). time.sleep calls add ~3s between actions and are not configurable. UI text is in Portuguese. No tests, no logging. Interactive input() requires a TTY — will not run in non-interactive environments.',
+];
 
-const AUDIENCE_OPTIONS: Audience[] = ['developers', 'maintainers', 'end-users'];
+export function ClarificationForm({ questions, onSubmit, onBack }: ClarificationFormProps) {
+  const [answers, setAnswers] = useState<Record<string, string>>({});
 
-export function ClarificationForm({ onSubmit, onBack }: ClarificationFormProps) {
-  const [projectName, setProjectName] = useState('');
-  const [audience, setAudience] = useState<Audience>('developers');
-  const [notes, setNotes] = useState('');
-  const [includeExamples, setIncludeExamples] = useState(true);
+  const fillSampleData = () => {
+    const filled: Record<string, string> = {};
+    questions.forEach((q, i) => {
+      filled[q.id] =
+        SAMPLE_ANSWERS[i] ?? SAMPLE_ANSWERS[SAMPLE_ANSWERS.length - 1];
+    });
+    setAnswers(filled);
+  };
 
-  const ready = projectName.trim().length > 0;
+  const answeredCount = questions.reduce(
+    (acc, q) => acc + (answers[q.id]?.trim() ? 1 : 0),
+    0,
+  );
+  const ready = questions.length > 0 && answeredCount === questions.length;
+
+  const handleChange = (id: string, value: string) => {
+    setAnswers((prev) => ({ ...prev, [id]: value }));
+  };
 
   const handleSubmit = () => {
     if (!ready) return;
-    onSubmit([]);
+    const payload: ClarificationAnswer[] = questions.map((q) => ({
+      questionId: q.id,
+      answer: answers[q.id] ?? '',
+    }));
+    onSubmit(payload);
   };
+
+  const pad = (n: number) => String(n).padStart(2, '0');
 
   return (
     <div className="phase-enter">
@@ -63,83 +87,33 @@ export function ClarificationForm({ onSubmit, onBack }: ClarificationFormProps) 
             <div className="line" />
           </div>
 
-          <div className="field">
-            <span className="num">01</span>
-            <div>
-              <label className="field-lbl" htmlFor="cf-project">
-                Project name<span className="req">*</span>
-              </label>
-              <div className="field-hint">A short identifier we&apos;ll use across the generated docs.</div>
-              <input
-                id="cf-project"
-                className="text-input"
-                placeholder="e.g. parallax-cli"
-                value={projectName}
-                onChange={(e) => setProjectName(e.target.value)}
-              />
+          {questions.length === 0 && (
+            <div className="field-hint" style={{ padding: '12px 0' }}>
+              No questions returned by the model.
             </div>
-          </div>
+          )}
 
-          <div className="field">
-            <span className="num">02</span>
-            <div>
-              <label className="field-lbl">Primary audience</label>
-              <div className="field-hint">Who is this documentation written for?</div>
-              <div className="picker">
-                {AUDIENCE_OPTIONS.map((opt) => (
-                  <button
-                    key={opt}
-                    type="button"
-                    className={`pick ${audience === opt ? 'selected' : ''}`}
-                    onClick={() => setAudience(opt)}
-                  >
-                    <span className="bx">[{audience === opt ? 'x' : ' '}]</span>
-                    <span>{opt}</span>
-                  </button>
-                ))}
+          {questions.map((q, i) => {
+            const inputId = `cf-${q.id}`;
+            return (
+              <div key={q.id} className="field">
+                <span className="num">{pad(i + 1)}</span>
+                <div>
+                  <label className="field-lbl" htmlFor={inputId}>
+                    {q.question}
+                    <span className="req">*</span>
+                  </label>
+                  <textarea
+                    id={inputId}
+                    className="text-input ta"
+                    placeholder="Your answer..."
+                    value={answers[q.id] ?? ''}
+                    onChange={(e) => handleChange(q.id, e.target.value)}
+                  />
+                </div>
               </div>
-            </div>
-          </div>
-
-          <div className="field">
-            <span className="num">03</span>
-            <div>
-              <label className="field-lbl" htmlFor="cf-notes">
-                Additional context
-              </label>
-              <div className="field-hint">
-                Anything important about the codebase that won&apos;t be obvious from the source?
-              </div>
-              <textarea
-                id="cf-notes"
-                className="text-input ta"
-                placeholder="e.g. uses a custom event bus, ships as both CLI and library..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="field">
-            <span className="num">04</span>
-            <div>
-              <label className="field-lbl">Include code examples</label>
-              <div className="field-hint">When relevant, embed snippets in the generated docs.</div>
-              <div className="toggle-row">
-                <span className={`toggle-label ${!includeExamples ? 'active' : ''}`}>OFF</span>
-                <button
-                  type="button"
-                  className={`toggle ${includeExamples ? 'on' : ''}`}
-                  onClick={() => setIncludeExamples((v) => !v)}
-                  aria-pressed={includeExamples}
-                >
-                  <span className="toggle-knob" />
-                </button>
-                <span className={`toggle-label ${includeExamples ? 'active' : ''}`}>ON</span>
-                <span className="toggle-aux">RECOMMENDED</span>
-              </div>
-            </div>
-          </div>
+            );
+          })}
 
           <div className="form-footer">
             <button type="button" className="btn-back" onClick={onBack}>
@@ -154,29 +128,55 @@ export function ClarificationForm({ onSubmit, onBack }: ClarificationFormProps) 
         <aside className="right-rail-card">
           <div className="right-label">PREVIEW</div>
           <div className="preview-section">
-            <div className="k">PROJECT</div>
-            <div className={`v ${projectName ? '' : 'empty'}`}>{projectName || 'Unnamed'}</div>
-          </div>
-          <div className="preview-section">
-            <div className="k">AUDIENCE</div>
+            <div className="k">QUESTIONS</div>
             <div className="v">
-              <span className="pill">{audience}</span>
+              <span className="pill">{questions.length}</span>
             </div>
           </div>
           <div className="preview-section">
-            <div className="k">CODE EXAMPLES</div>
+            <div className="k">ANSWERED</div>
             <div className="v">
-              <span className={`pill ${includeExamples ? '' : 'muted'}`}>
-                {includeExamples ? 'INCLUDED' : 'OMITTED'}
+              <span className={`pill ${answeredCount === questions.length ? '' : 'muted'}`}>
+                {answeredCount}/{questions.length}
               </span>
             </div>
           </div>
-          <div className="preview-section">
-            <div className="k">NOTES</div>
-            <div className={`v ${notes ? '' : 'empty'}`}>{notes || 'No additional context'}</div>
-          </div>
+          {questions.map((q, i) => (
+            <div key={q.id} className="preview-section">
+              <div className="k">Q{pad(i + 1)}</div>
+              <div className={`v ${answers[q.id]?.trim() ? '' : 'empty'}`}>
+                {answers[q.id]?.trim() || 'Unanswered'}
+              </div>
+            </div>
+          ))}
         </aside>
       </div>
+
+      {import.meta.env.DEV && questions.length > 0 && (
+        <button
+          type="button"
+          onClick={fillSampleData}
+          title="Fill all answers with sample test data"
+          style={{
+            position: 'fixed',
+            bottom: 24,
+            right: 24,
+            zIndex: 1000,
+            padding: '12px 18px',
+            border: '1px solid #6c8',
+            background: 'rgba(20, 40, 30, 0.95)',
+            color: '#9fc',
+            fontFamily: 'monospace',
+            fontSize: 12,
+            letterSpacing: '0.05em',
+            cursor: 'pointer',
+            borderRadius: 4,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+          }}
+        >
+          🧪 FILL TEST DATA
+        </button>
+      )}
     </div>
   );
 }
