@@ -100,20 +100,21 @@ button{cursor:pointer}
 .tab-meta .dot{display:inline-block;width:6px;height:6px;background:var(--text-muted);margin-right:6px;vertical-align:middle}
 .tab-meta .dot.ok{background:var(--accent);box-shadow:0 0 8px var(--accent)}
 
-.code-area{position:relative;min-height:320px}
+.code-area{position:relative;min-height:320px;overflow:hidden}
 .gutter{
   position:absolute;left:0;top:0;bottom:0;width:56px;
   border-right:1px solid var(--border);background:rgba(0,0,0,.18);
-  font-family:var(--mono);font-size:12px;color:var(--text-muted);
+  font-family:var(--code);font-size:13px;color:var(--text-muted);
   padding:16px 8px;text-align:right;user-select:none;pointer-events:none;
-  white-space:pre;line-height:1.6;
+  line-height:20.8px;overflow:hidden;
 }
+.gutter-inner{white-space:pre;font-variant-numeric:tabular-nums}
 .code-input{
-  display:block;width:100%;min-height:320px;
-  padding:16px 16px 16px 72px;
+  display:block;margin-left:56px;width:calc(100% - 56px);min-height:320px;
+  padding:16px;
   background:transparent;border:0;outline:0;resize:vertical;
   color:var(--text);font-family:var(--code);font-size:13px;
-  line-height:1.6;caret-color:var(--accent);
+  line-height:20.8px;caret-color:var(--accent);
 }
 .code-input::placeholder{color:var(--text-muted)}
 

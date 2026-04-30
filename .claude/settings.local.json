@@ -9,7 +9,9 @@
       "PowerShell(gh *)",
       "Bash(git checkout *)",
       "Bash(npm run *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "PowerShell(& \"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" issue view 10 --repo guilhermerezende10/documentation-creator)",
+      "Bash(git ls-remote *)"
     ]
   }
 }
