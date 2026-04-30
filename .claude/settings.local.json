@@ -12,6 +12,8 @@
       "Bash(git commit *)",
       "PowerShell(& \"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" issue view 10 --repo guilhermerezende10/documentation-creator)",
       "Bash(git ls-remote *)"
+      "Bash(gh issue *)",
+      "Bash(gh label *)"
     ]
   }
 }
