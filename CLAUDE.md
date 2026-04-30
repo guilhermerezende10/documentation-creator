@@ -47,9 +47,9 @@ src/
 
 Toggled via `VITE_LLM_PROVIDER` env var:
 
-| Provider | Use case | Cost |
-|---|---|---|
-| `ollama` | Local development | Free |
+| Provider | Use case                    | Cost |
+| -------- | --------------------------- | ---- |
+| `ollama` | Local development           | Free |
 | `claude` | Production / premium option | Paid |
 
 Switching providers requires only changing this one env var. No other files change.
@@ -86,8 +86,8 @@ VITE_CLAUDE_MODEL=claude-haiku-4-5
 
 - `main` — production
 - `develop` — integration branch
-- `feature/initial-design` — Guilherme's UI branch
-- `feature/llm-implementation` — Rafael's LLM branch
+
+- **If the user provides a GitHub issue URL**, create a new branch off `develop` (use a descriptive name like `issue/123-short-description`) and solve the issue on that branch. If there is **no GitHub issue link**, do **not** create a new branch unless the user explicitly asks.
 
 ## Out of Scope (v1)
 
