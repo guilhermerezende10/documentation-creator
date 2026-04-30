@@ -8,6 +8,7 @@ import type {
   Progress,
 } from '../types';
 import { callLLM } from '../services/llmService';
+import { fetchGitHubRepoDetailed } from '../utils/githubFetcher';
 import { buildClarificationPrompt, buildDocPrompt } from '../utils/promptBuilder';
 
 export interface UseDocGeneratorResult {
@@ -26,12 +27,6 @@ function getConfig(): LLMConfig {
     ollamaModel: import.meta.env.VITE_OLLAMA_MODEL,
     claudeApiKey: import.meta.env.VITE_CLAUDE_API_KEY,
   };
-}
-
-async function fetchUrlAsText(url: string): Promise<string> {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error('Failed to fetch ' + url + ': ' + res.status);
-  return await res.text();
 }
 
 function parseQuestions(raw: string): ClarificationQuestion[] {
@@ -81,8 +76,21 @@ export function useDocGenerator(): UseDocGeneratorResult {
       let resolved = data;
       if (data.mode === 'link') {
         if (!data.url) throw new Error('URL is required for link mode');
-        const code = await fetchUrlAsText(data.url);
-        resolved = { ...data, code };
+        const fetched = await fetchGitHubRepoDetailed(data.url);
+        console.info('[docgen] GitHub fetch:', {
+          included: fetched.filesIncluded,
+          skipped: fetched.filesSkipped,
+          truncated: fetched.truncated,
+        });
+        const skippedNote = fetched.filesSkipped.length
+          ? `, ${fetched.filesSkipped.length} skipped`
+          : '';
+        const truncNote = fetched.truncated ? ' (tree truncated)' : '';
+        setProgress({
+          step: `Fetched ${fetched.filesIncluded.length} files${skippedNote}${truncNote}`,
+          percent: 25,
+        });
+        resolved = { ...data, code: fetched.text };
       } else if (!data.code) {
         throw new Error('Code is required for paste mode');
       }
