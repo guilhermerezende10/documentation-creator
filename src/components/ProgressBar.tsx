@@ -44,10 +44,7 @@ export function ProgressBar({ progress, onComplete }: ProgressBarProps) {
             </h1>
             <div className="run-meta" style={{ marginTop: 12 }}>
               <span>
-                SECTION <span className="v">2/5</span>
-              </span>
-              <span>
-                ELAPSED <span className="v">00:18</span>
+                STEP <span className="v">{progress.step}</span>
               </span>
               <span>
                 MODEL <span className="v">CLAUDE-H-4</span>
@@ -82,16 +79,7 @@ export function ProgressBar({ progress, onComplete }: ProgressBarProps) {
 
         <div className="console">
           <div className="line">
-            <span className="t">[12:04:18]</span> <span className="ok">→</span> Started README section
-          </div>
-          <div className="line">
-            <span className="t">[12:04:24]</span> <span className="info">i</span> Parsed 12 exports
-          </div>
-          <div className="line">
-            <span className="t">[12:04:30]</span> <span className="ok">✓</span> README complete
-          </div>
-          <div className="line">
-            <span className="t">[12:04:31]</span> <span className="ok">→</span> Started API section
+            <span className="ok">→</span> {progress.step}
             <span className="cursor" />
           </div>
         </div>
