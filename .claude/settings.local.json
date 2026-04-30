@@ -11,8 +11,13 @@
       "Bash(npm run *)",
       "Bash(git commit *)",
       "PowerShell(& \"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" issue view 10 --repo guilhermerezende10/documentation-creator)",
-      "Bash(git ls-remote *)"
+      "Bash(git ls-remote *)",
       "Bash(gh issue *)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:api.github.com)",
+      "Bash(git fetch *)",
+      "Bash(git pull *)",
+      "Bash(gh repo *)",
       "Bash(gh label *)"
     ]
   }

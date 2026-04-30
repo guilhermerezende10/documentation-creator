@@ -9,7 +9,7 @@ const SAMPLE_ANSWERS: string[] = [
   'Inputs are not validated for negative numbers (factorial and palindrome silently misbehave for non-positive input). time.sleep calls add ~3s between actions and are not configurable. UI text is in Portuguese. No tests, no logging. Interactive input() requires a TTY — will not run in non-interactive environments.',
 ];
 
-export function ClarificationForm({ questions, onSubmit, onBack }: ClarificationFormProps) {
+export function ClarificationForm({ questions, onSubmit, onBack, isLoading = false }: ClarificationFormProps) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
   const fillSampleData = () => {
@@ -32,7 +32,7 @@ export function ClarificationForm({ questions, onSubmit, onBack }: Clarification
   };
 
   const handleSubmit = () => {
-    if (!ready) return;
+    if (!ready || isLoading) return;
     const payload: ClarificationAnswer[] = questions.map((q) => ({
       questionId: q.id,
       answer: answers[q.id] ?? '',
@@ -116,11 +116,29 @@ export function ClarificationForm({ questions, onSubmit, onBack }: Clarification
           })}
 
           <div className="form-footer">
-            <button type="button" className="btn-back" onClick={onBack}>
+            <button
+              type="button"
+              className="btn-back"
+              onClick={onBack}
+              disabled={isLoading}
+            >
               ← BACK
             </button>
-            <button type="button" className="btn-go" disabled={!ready} onClick={handleSubmit}>
-              GENERATE →
+            <button
+              type="button"
+              className="btn-go"
+              disabled={!ready || isLoading}
+              onClick={handleSubmit}
+              aria-busy={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <span className="spinner" aria-hidden="true" />
+                  GENERATING…
+                </>
+              ) : (
+                'GENERATE →'
+              )}
             </button>
           </div>
         </section>

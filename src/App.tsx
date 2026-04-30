@@ -11,7 +11,7 @@ const FALLBACK_PROGRESS: Progress = { step: 'Working', percent: 0 };
 function App() {
   const [phase, setPhase] = useState<Phase>('input');
   const [error, setError] = useState<string | null>(null);
-  const { progress, questions, doc, startGeneration, submitAnswers, reset } =
+  const { progress, questions, doc, isLoading, startGeneration, submitAnswers, reset } =
     useDocGenerator();
 
   useEffect(() => {
@@ -27,24 +27,24 @@ function App() {
   }, [phase, doc]);
 
   const handleInputSubmit = async (data: InputData) => {
+    if (isLoading) return;
     setError(null);
-    setPhase('running');
     try {
       await startGeneration(data);
+      setPhase('clarification');
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
-      setPhase('input');
     }
   };
 
   const handleAnswersSubmit = async (answers: ClarificationAnswer[]) => {
+    if (isLoading) return;
     setError(null);
-    setPhase('running');
     try {
       await submitAnswers(answers);
+      setPhase('output');
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
-      setPhase('clarification');
     }
   };
 
@@ -94,12 +94,15 @@ function App() {
               ERROR — {error}
             </div>
           )}
-          {phase === 'input' && <FileInput onSubmit={handleInputSubmit} />}
+          {phase === 'input' && (
+            <FileInput onSubmit={handleInputSubmit} isLoading={isLoading} />
+          )}
           {phase === 'clarification' && (
             <ClarificationForm
               questions={questions}
               onSubmit={handleAnswersSubmit}
               onBack={handleBack}
+              isLoading={isLoading}
             />
           )}
           {phase === 'running' && (

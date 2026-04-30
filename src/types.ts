@@ -43,12 +43,14 @@ export interface Progress {
 
 export interface FileInputProps {
   onSubmit: (data: InputData) => void;
+  isLoading?: boolean;
 }
 
 export interface ClarificationFormProps {
   questions: ClarificationQuestion[];
   onSubmit: (answers: ClarificationAnswer[]) => void;
   onBack?: () => void;
+  isLoading?: boolean;
 }
 
 export interface DocOutputProps {
