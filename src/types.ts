@@ -1,4 +1,4 @@
-export type Phase = 'input' | 'clarification' | 'output';
+export type Phase = 'input' | 'clarification' | 'running' | 'output';
 
 export type LLMProvider = 'ollama' | 'claude';
 
@@ -8,9 +8,12 @@ export interface LLMConfig {
   claudeApiKey?: string;
 }
 
+export type InputMode = 'paste' | 'link';
+
 export interface InputData {
-  files: File[];
-  description: string;
+  mode: InputMode;
+  code?: string;
+  url?: string;
 }
 
 export interface ClarificationQuestion {
@@ -45,13 +48,15 @@ export interface FileInputProps {
 export interface ClarificationFormProps {
   questions: ClarificationQuestion[];
   onSubmit: (answers: ClarificationAnswer[]) => void;
+  onBack?: () => void;
 }
 
 export interface DocOutputProps {
-  doc: GeneratedDoc;
+  doc: GeneratedDoc | null;
   onReset: () => void;
 }
 
 export interface ProgressBarProps {
   progress: Progress;
+  onComplete?: () => void;
 }
