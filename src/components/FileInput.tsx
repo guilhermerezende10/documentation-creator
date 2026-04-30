@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { UIEventHandler } from 'react';
 import type { FileInputProps, InputMode } from '../types';
 
 const GITHUB_URL = /^https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/?$/i;
@@ -19,6 +20,29 @@ export function FileInput({ onSubmit }: FileInputProps) {
     const lineCount = Math.max(code.split('\n').length, 14);
     return Array.from({ length: lineCount }, (_, i) => String(i + 1)).join('\n');
   }, [code]);
+
+  const gutterRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const ta = textareaRef.current;
+    const gutter = gutterRef.current;
+    if (!ta || !gutter) return;
+    const update = () => {
+      const scrollbarHeight = ta.offsetHeight - ta.clientHeight;
+      gutter.style.paddingBottom = `${16 + scrollbarHeight}px`;
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(ta);
+    return () => ro.disconnect();
+  }, [code]);
+
+  const handleGutterSync: UIEventHandler<HTMLTextAreaElement> = (e) => {
+    if (gutterRef.current) {
+      gutterRef.current.scrollTop = e.currentTarget.scrollTop;
+    }
+  };
 
   const handleSubmit = () => {
     if (!ready) return;
@@ -74,13 +98,18 @@ export function FileInput({ onSubmit }: FileInputProps) {
 
         {tab === 'paste' ? (
           <div className="code-area">
-            <div className="gutter">{gutter}</div>
+            <div className="gutter" ref={gutterRef} aria-hidden="true">
+              <div className="gutter-inner">{gutter}</div>
+            </div>
             <textarea
+              ref={textareaRef}
               className="code-input"
               placeholder="// paste your code here..."
               value={code}
               onChange={(e) => setCode(e.target.value)}
+              onScroll={handleGutterSync}
               spellCheck={false}
+              wrap="off"
             />
           </div>
         ) : (
