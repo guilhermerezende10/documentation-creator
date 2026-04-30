@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import type { DocOutputProps } from '../types';
+import { copyMarkdown, downloadMarkdown, downloadZip } from '../utils/exporters';
 
 const FULL_TAB_ID = '__full__';
 
@@ -49,6 +50,16 @@ export function DocOutput({ doc, onReset }: DocOutputProps) {
       ? `${slugify(active.label).toUpperCase()}.md`
       : '';
 
+  const handleCopy = () => {
+    if (doc) void copyMarkdown(doc);
+  };
+  const handleDownload = () => {
+    if (doc) downloadMarkdown(doc);
+  };
+  const handleDownloadZip = () => {
+    if (doc) void downloadZip(doc);
+  };
+
   return (
     <div className="phase-enter output-shell">
       <nav className="crumb">
@@ -70,8 +81,9 @@ export function DocOutput({ doc, onReset }: DocOutputProps) {
           <button type="button" className="btn-out" onClick={onReset}>
             ↻ START OVER
           </button>
-          <button type="button" className="btn-out">COPY</button>
-          <button type="button" className="btn-out primary">↓ DOWNLOAD</button>
+          <button type="button" className="btn-out" onClick={handleCopy} disabled={!doc}>COPY</button>
+          <button type="button" className="btn-out" onClick={handleDownloadZip} disabled={!doc}>↓ ZIP</button>
+          <button type="button" className="btn-out primary" onClick={handleDownload} disabled={!doc}>↓ DOWNLOAD</button>
         </div>
       </header>
 
