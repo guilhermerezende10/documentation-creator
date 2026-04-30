@@ -1,0 +1,109 @@
+import type { ProgressBarProps } from '../types';
+
+type SectionStatus = 'done' | 'running' | 'pending' | 'skipped';
+
+interface SectionState {
+  name: string;
+  desc: string;
+  status: SectionStatus;
+}
+
+const STATUS_META: Record<SectionStatus, { icon: string; label: string }> = {
+  done: { icon: '✓', label: 'DONE' },
+  running: { icon: '▸', label: 'RUNNING' },
+  pending: { icon: '○', label: 'PENDING' },
+  skipped: { icon: '—', label: 'SKIPPED' },
+};
+
+const SECTIONS: SectionState[] = [
+  { name: 'README', desc: 'Project overview', status: 'done' },
+  { name: 'API', desc: 'API documentation', status: 'running' },
+  { name: 'USAGE', desc: 'Examples & flows', status: 'pending' },
+  { name: 'ARCHITECTURE', desc: 'High-level structure', status: 'pending' },
+  { name: 'CONTRIBUTING', desc: 'Contribution guide', status: 'skipped' },
+];
+
+export function ProgressBar({ progress, onComplete }: ProgressBarProps) {
+  const percent = Math.min(100, Math.max(0, progress.percent));
+
+  return (
+    <div className="phase-enter run-shell">
+      <nav className="crumb">
+        <span>SOURCE</span>
+        <span className="sep">/</span>
+        <span>CLARIFY</span>
+        <span className="sep">/</span>
+        <span className="cur">GENERATE</span>
+      </nav>
+
+      <div className="run-card">
+        <div className="run-header">
+          <div>
+            <h1 className="h1">
+              Generating <em>documentation</em>
+            </h1>
+            <div className="run-meta" style={{ marginTop: 12 }}>
+              <span>
+                SECTION <span className="v">2/5</span>
+              </span>
+              <span>
+                ELAPSED <span className="v">00:18</span>
+              </span>
+              <span>
+                MODEL <span className="v">CLAUDE-H-4</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="progress-row">
+          <span>PROGRESS — {progress.step}</span>
+          <span className="v">{percent}%</span>
+        </div>
+        <div className="progress" style={{ marginBottom: 24 }}>
+          <div className="bar" style={{ width: `${percent}%` }} />
+        </div>
+
+        <div className="section-list">
+          {SECTIONS.map((s) => {
+            const meta = STATUS_META[s.status];
+            return (
+              <div key={s.name} className={`section-row ${s.status}`}>
+                <span className="icon">{meta.icon}</span>
+                <div className="info">
+                  <div className="name">{s.name}</div>
+                  <div className="desc">{s.desc}</div>
+                </div>
+                <div className="status">{meta.label}</div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="console">
+          <div className="line">
+            <span className="t">[12:04:18]</span> <span className="ok">→</span> Started README section
+          </div>
+          <div className="line">
+            <span className="t">[12:04:24]</span> <span className="info">i</span> Parsed 12 exports
+          </div>
+          <div className="line">
+            <span className="t">[12:04:30]</span> <span className="ok">✓</span> README complete
+          </div>
+          <div className="line">
+            <span className="t">[12:04:31]</span> <span className="ok">→</span> Started API section
+            <span className="cursor" />
+          </div>
+        </div>
+
+        {onComplete && (
+          <div className="form-footer">
+            <button type="button" className="btn-go" onClick={onComplete}>
+              VIEW OUTPUT →
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
