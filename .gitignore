@@ -13,4 +13,9 @@ dist-ssr
 .idea
 .DS_Store
 *.log
-/.vite
+
+# Vite cache
+.vite
+
+# Claude Code
+.claude/settings.local.json
