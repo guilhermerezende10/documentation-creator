@@ -1,6 +1,6 @@
-import type { ProgressBarProps } from '../types';
+import type { ProgressBarProps } from "../types";
 
-type SectionStatus = 'done' | 'running' | 'pending' | 'skipped';
+type SectionStatus = "done" | "running" | "pending" | "skipped";
 
 interface SectionState {
   name: string;
@@ -9,18 +9,18 @@ interface SectionState {
 }
 
 const STATUS_META: Record<SectionStatus, { icon: string; label: string }> = {
-  done: { icon: '✓', label: 'DONE' },
-  running: { icon: '▸', label: 'RUNNING' },
-  pending: { icon: '○', label: 'PENDING' },
-  skipped: { icon: '—', label: 'SKIPPED' },
+  done: { icon: "✓", label: "DONE" },
+  running: { icon: "▸", label: "RUNNING" },
+  pending: { icon: "○", label: "PENDING" },
+  skipped: { icon: "—", label: "SKIPPED" },
 };
 
 const SECTIONS: SectionState[] = [
-  { name: 'README', desc: 'Project overview', status: 'done' },
-  { name: 'API', desc: 'API documentation', status: 'running' },
-  { name: 'USAGE', desc: 'Examples & flows', status: 'pending' },
-  { name: 'ARCHITECTURE', desc: 'High-level structure', status: 'pending' },
-  { name: 'CONTRIBUTING', desc: 'Contribution guide', status: 'skipped' },
+  { name: "README", desc: "Project overview", status: "done" },
+  { name: "API", desc: "API documentation", status: "running" },
+  { name: "USAGE", desc: "Examples & flows", status: "pending" },
+  { name: "ARCHITECTURE", desc: "High-level structure", status: "pending" },
+  { name: "CONTRIBUTING", desc: "Contribution guide", status: "skipped" },
 ];
 
 export function ProgressBar({ progress, onComplete }: ProgressBarProps) {
@@ -47,7 +47,7 @@ export function ProgressBar({ progress, onComplete }: ProgressBarProps) {
                 STEP <span className="v">{progress.step}</span>
               </span>
               <span>
-                MODEL <span className="v">CLAUDE-H-4</span>
+                MODEL <span className="v">LLAMA 3.1</span>
               </span>
             </div>
           </div>
