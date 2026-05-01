@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { isValidElement, useCallback, useEffect, useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
+import type { Components } from 'react-markdown';
 import type { DocOutputProps } from '../types';
 import { copyMarkdown, downloadMarkdown, downloadZip } from '../utils/exporters';
 
@@ -18,6 +20,39 @@ function bytesLabel(text: string): string {
   return `${(bytes / 1024).toFixed(1)} KB`;
 }
 
+function nodeText(node: ReactNode): string {
+  if (node == null || typeof node === 'boolean') return '';
+  if (typeof node === 'string' || typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(nodeText).join('');
+  if (isValidElement(node)) {
+    return nodeText((node.props as { children?: ReactNode }).children);
+  }
+  return '';
+}
+
+const headingComponents: Components = {
+  h1: ({ children, ...props }) => (
+    <h1 id={slugify(nodeText(children))} {...props}>
+      {children}
+    </h1>
+  ),
+  h2: ({ children, ...props }) => (
+    <h2 id={slugify(nodeText(children))} {...props}>
+      {children}
+    </h2>
+  ),
+  h3: ({ children, ...props }) => (
+    <h3 id={slugify(nodeText(children))} {...props}>
+      {children}
+    </h3>
+  ),
+};
+
+function scrollToHeading(id: string) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 export function DocOutput({ doc, onReset }: DocOutputProps) {
   const tabs = useMemo(() => {
     if (!doc) return [] as { id: string; label: string; markdown: string }[];
@@ -33,12 +68,34 @@ export function DocOutput({ doc, onReset }: DocOutputProps) {
   }, [doc]);
 
   const [activeTab, setActiveTab] = useState<string>(FULL_TAB_ID);
+  const [pendingScrollId, setPendingScrollId] = useState<string | null>(null);
 
   useEffect(() => {
     if (tabs.length > 0 && !tabs.some((t) => t.id === activeTab)) {
       setActiveTab(tabs[0].id);
     }
   }, [tabs, activeTab]);
+
+  useEffect(() => {
+    if (pendingScrollId && activeTab === FULL_TAB_ID) {
+      const id = pendingScrollId;
+      setPendingScrollId(null);
+      requestAnimationFrame(() => scrollToHeading(id));
+    }
+  }, [pendingScrollId, activeTab]);
+
+  const handleTocClick = useCallback(
+    (title: string) => {
+      const id = slugify(title);
+      if (activeTab !== FULL_TAB_ID) {
+        setPendingScrollId(id);
+        setActiveTab(FULL_TAB_ID);
+      } else {
+        scrollToHeading(id);
+      }
+    },
+    [activeTab],
+  );
 
   const active = tabs.find((t) => t.id === activeTab) ?? tabs[0];
   const sectionCount = doc?.sections.length ?? 0;
@@ -113,7 +170,7 @@ export function DocOutput({ doc, onReset }: DocOutputProps) {
           </div>
 
           {active ? (
-            <ReactMarkdown>{active.markdown}</ReactMarkdown>
+            <ReactMarkdown components={headingComponents}>{active.markdown}</ReactMarkdown>
           ) : (
             <p>No documentation generated.</p>
           )}
@@ -123,7 +180,11 @@ export function DocOutput({ doc, onReset }: DocOutputProps) {
           <div className="label">CONTENTS</div>
           <ol>
             {doc?.sections.map((s) => (
-              <li key={s.title}>{s.title}</li>
+              <li key={s.title}>
+                <button type="button" onClick={() => handleTocClick(s.title)}>
+                  {s.title}
+                </button>
+              </li>
             )) ?? <li>—</li>}
           </ol>
         </aside>
