@@ -47,10 +47,9 @@ src/
 
 Toggled via `VITE_LLM_PROVIDER` env var:
 
-| Provider | Use case                    | Cost |
-| -------- | --------------------------- | ---- |
-| `ollama` | Local development           | Free |
-| `claude` | Production / premium option | Paid |
+| Provider | Use case          | Cost |
+| -------- | ----------------- | ---- |
+| `ollama` | Local development | Free |
 
 Switching providers requires only changing this one env var. No other files change.
 
@@ -71,15 +70,11 @@ Switching providers requires only changing this one env var. No other files chan
 ## Environment Variables
 
 ```env
-# Provider selection: ollama | claude
+# Provider selection: ollama
 VITE_LLM_PROVIDER=ollama
 
 # Ollama (local)
 VITE_OLLAMA_MODEL=llama3.1:8b
-
-# Claude API (Anthropic, paid) — get key at console.anthropic.com
-VITE_CLAUDE_API_KEY=
-VITE_CLAUDE_MODEL=claude-haiku-4-5
 ```
 
 ## Git Branch Strategy
