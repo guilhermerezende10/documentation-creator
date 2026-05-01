@@ -84,6 +84,20 @@ export function ClarificationForm({
               <span className="v ok">READY</span>
             </div>
           </div>
+
+          {questions.length > 0 && onSuggestAnswers && (
+            <button
+              type="button"
+              className="suggest-btn"
+              onClick={handleSuggest}
+              disabled={isSuggesting || isLoading}
+              aria-busy={isSuggesting}
+              title="Use the LLM to draft an answer for each question"
+            >
+              {isSuggesting && <span className="spinner" aria-hidden="true" />}
+              Suggest AI answers
+            </button>
+          )}
         </aside>
 
         <section className="form-card">
@@ -149,25 +163,6 @@ export function ClarificationForm({
         </section>
       </div>
 
-      {questions.length > 0 && onSuggestAnswers && (
-        <button
-          type="button"
-          className="suggest-fab"
-          onClick={handleSuggest}
-          disabled={isSuggesting || isLoading}
-          aria-busy={isSuggesting}
-          title="Use the LLM to draft an answer for each question"
-        >
-          {isSuggesting ? (
-            <>
-              <span className="spinner" aria-hidden="true" />
-              SUGGESTING…
-            </>
-          ) : (
-            "✨ SUGGEST ANSWERS"
-          )}
-        </button>
-      )}
     </div>
   );
 }
