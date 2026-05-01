@@ -2,6 +2,8 @@ export type Phase = 'input' | 'clarification' | 'running' | 'output';
 
 export type LLMProvider = 'ollama';
 
+export type LLMStatus = 'unknown' | 'online' | 'offline';
+
 export interface LLMConfig {
   provider: LLMProvider;
   ollamaModel?: string;

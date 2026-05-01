@@ -4,7 +4,7 @@
   --bg:#0D0F12;--surface:#13161C;--code-bg:#0A0C0F;
   --border:#1E2330;--border-hi:#2A3042;
   --text:#F0F2F6;--text-2:#7A8499;--text-muted:#3D4557;
-  --accent:#4FFFB0;--accent-2:#6E8AFF;--warm:#FF9B4E;
+  --accent:#4FFFB0;--accent-2:#6E8AFF;--warm:#FF9B4E;--bad:#FF3B3B;
   --serif:"DM Serif Display","Iowan Old Style",Georgia,serif;
   --display:"Fraunces","DM Serif Display",serif;
   --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
@@ -60,6 +60,8 @@ button{cursor:pointer}
 .topbar-meta{font-size:11px;color:var(--text-2);letter-spacing:.14em;text-transform:uppercase;display:flex;gap:18px;align-items:center}
 .topbar-meta .ok{color:var(--accent)}
 .topbar-meta .dot{display:inline-block;width:6px;height:6px;background:var(--accent);margin-right:6px;vertical-align:1px;box-shadow:0 0 8px var(--accent)}
+.topbar-meta .dot.bad{background:var(--bad);box-shadow:0 0 8px var(--bad)}
+.topbar.offline .topbar-line::after{background:var(--bad)}
 
 .app{position:relative;z-index:1;min-height:100vh}
 .shell{max-width:1180px;margin:0 auto;padding:48px 32px 120px}
