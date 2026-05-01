@@ -9,16 +9,22 @@ import type {
 } from '../types';
 import { callLLM } from '../services/llmService';
 import { fetchGitHubRepoDetailed } from '../utils/githubFetcher';
-import { parseDoc, parseQuestions } from '../utils/llmParser';
-import { buildClarificationPrompt, buildDocPrompt } from '../utils/promptBuilder';
+import { parseDoc, parseQuestions, parseSuggestions } from '../utils/llmParser';
+import {
+  buildAnswerSuggestionPrompt,
+  buildClarificationPrompt,
+  buildDocPrompt,
+} from '../utils/promptBuilder';
 
 export interface UseDocGeneratorResult {
   progress: Progress | null;
   questions: ClarificationQuestion[];
   doc: GeneratedDoc | null;
   isLoading: boolean;
+  isSuggesting: boolean;
   startGeneration: (data: InputData) => Promise<void>;
   submitAnswers: (answers: ClarificationAnswer[]) => Promise<void>;
+  suggestAnswers: () => Promise<Record<string, string>>;
   reset: () => void;
 }
 
@@ -36,6 +42,7 @@ export function useDocGenerator(): UseDocGeneratorResult {
   const [doc, setDoc] = useState<GeneratedDoc | null>(null);
   const [pendingInput, setPendingInput] = useState<InputData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSuggesting, setIsSuggesting] = useState(false);
 
   async function startGeneration(data: InputData) {
     try {
@@ -93,13 +100,37 @@ export function useDocGenerator(): UseDocGeneratorResult {
     }
   }
 
+  async function suggestAnswers(): Promise<Record<string, string>> {
+    if (!pendingInput) throw new Error('No input data; submit code first');
+    if (questions.length === 0) return {};
+    try {
+      setIsSuggesting(true);
+      const prompt = buildAnswerSuggestionPrompt(pendingInput, questions);
+      const raw = await callLLM(prompt, getConfig());
+      return parseSuggestions(raw);
+    } finally {
+      setIsSuggesting(false);
+    }
+  }
+
   function reset() {
     setProgress(null);
     setQuestions([]);
     setDoc(null);
     setPendingInput(null);
     setIsLoading(false);
+    setIsSuggesting(false);
   }
 
-  return { progress, questions, doc, isLoading, startGeneration, submitAnswers, reset };
+  return {
+    progress,
+    questions,
+    doc,
+    isLoading,
+    isSuggesting,
+    startGeneration,
+    submitAnswers,
+    suggestAnswers,
+    reset,
+  };
 }

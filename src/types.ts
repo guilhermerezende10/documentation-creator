@@ -51,6 +51,8 @@ export interface ClarificationFormProps {
   onSubmit: (answers: ClarificationAnswer[]) => void;
   onBack?: () => void;
   isLoading?: boolean;
+  isSuggesting?: boolean;
+  onSuggestAnswers?: () => Promise<Record<string, string>>;
 }
 
 export interface DocOutputProps {
