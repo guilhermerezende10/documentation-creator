@@ -1,10 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FileInput } from "./components/FileInput";
 import { ClarificationForm } from "./components/ClarificationForm";
 import { ProgressBar } from "./components/ProgressBar";
 import { DocOutput } from "./components/DocOutput";
 import { useDocGenerator } from "./hooks/useDocGenerator";
-import type { Phase, InputData, ClarificationAnswer, Progress } from "./types";
+import { useLLMStatus } from "./hooks/useLLMStatus";
+import type {
+  Phase,
+  InputData,
+  ClarificationAnswer,
+  Progress,
+  LLMConfig,
+} from "./types";
 
 const FALLBACK_PROGRESS: Progress = { step: "Working", percent: 0 };
 
@@ -22,6 +29,18 @@ function App() {
     suggestAnswers,
     reset,
   } = useDocGenerator();
+
+  const llmConfig = useMemo<LLMConfig>(
+    () => ({
+      provider: import.meta.env.VITE_LLM_PROVIDER || "ollama",
+      ollamaModel: import.meta.env.VITE_OLLAMA_MODEL,
+      ollamaBaseUrl: import.meta.env.VITE_OLLAMA_BASE_URL,
+    }),
+    [],
+  );
+  const llmStatus = useLLMStatus(llmConfig);
+  const isOffline = llmStatus === "offline";
+  const statusLabel = isOffline ? "OFFLINE" : "READY";
 
   const handleInputSubmit = async (data: InputData) => {
     if (isLoading) return;
@@ -78,15 +97,15 @@ function App() {
     <>
       <div className="app-bg" />
 
-      <header className="topbar">
+      <header className={"topbar" + (isOffline ? " offline" : "")}>
         <div className="logo">
           <span className="b">&lt;</span>docgen<span className="b">/&gt;</span>
         </div>
         <div className="topbar-line" />
         <div className="topbar-meta">
           <span>
-            <span className="dot" />
-            LLAMA 3.1 / READY
+            <span className={"dot" + (isOffline ? " bad" : "")} />
+            LLAMA 3.1 / {statusLabel}
           </span>
           <span className="ok">v1.0.4</span>
         </div>

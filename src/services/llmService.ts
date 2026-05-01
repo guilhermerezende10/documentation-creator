@@ -24,3 +24,33 @@ export async function callLLM(prompt: string, config: LLMConfig): Promise<string
   }
   throw new Error('Unknown provider: ' + (config as { provider: string }).provider);
 }
+
+export async function checkLLMHealth(
+  config: LLMConfig,
+  options: { signal?: AbortSignal; timeoutMs?: number } = {},
+): Promise<boolean> {
+  if (config.provider !== 'ollama') return false;
+  const baseUrl = (config.ollamaBaseUrl || 'http://localhost:11434').replace(/\/$/, '');
+  const url = baseUrl + '/api/tags';
+  const timeoutMs = options.timeoutMs ?? 4000;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const onParentAbort = () => controller.abort();
+  if (options.signal) {
+    if (options.signal.aborted) controller.abort();
+    else options.signal.addEventListener('abort', onParentAbort);
+  }
+
+  try {
+    const res = await fetch(url, { method: 'GET', signal: controller.signal });
+    if (!res.ok) return false;
+    await res.json();
+    return true;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timer);
+    if (options.signal) options.signal.removeEventListener('abort', onParentAbort);
+  }
+}
