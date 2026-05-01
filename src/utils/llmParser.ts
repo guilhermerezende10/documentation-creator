@@ -37,15 +37,23 @@ export function parseQuestions(raw: string): ClarificationQuestion[] {
   }
 
   const questions: ClarificationQuestion[] = [];
+  const usedIds = new Set<string>();
   for (let i = 0; i < parsed.length; i++) {
     const item = parsed[i] as RawQuestion;
     const question = typeof item?.question === 'string' ? item.question.trim() : '';
     if (!question) continue;
-    const rawId = typeof item?.id === 'string' ? item.id.trim() : '';
-    questions.push({
-      id: rawId || `q${questions.length + 1}`,
-      question,
-    });
+    let id = typeof item?.id === 'string' ? item.id.trim() : '';
+    if (!id || usedIds.has(id)) {
+      let n = questions.length + 1;
+      let candidate = `q${n}`;
+      while (usedIds.has(candidate)) {
+        n++;
+        candidate = `q${n}`;
+      }
+      id = candidate;
+    }
+    usedIds.add(id);
+    questions.push({ id, question });
   }
 
   if (questions.length === 0) {
