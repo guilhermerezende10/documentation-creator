@@ -1,12 +1,11 @@
 export type Phase = 'input' | 'clarification' | 'running' | 'output';
 
-export type LLMProvider = 'ollama' | 'claude';
+export type LLMProvider = 'ollama';
 
 export interface LLMConfig {
   provider: LLMProvider;
   ollamaModel?: string;
   ollamaBaseUrl?: string;
-  claudeApiKey?: string;
 }
 
 export type InputMode = 'paste' | 'link';
