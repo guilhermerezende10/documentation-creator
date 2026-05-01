@@ -9,6 +9,7 @@ import type {
 } from '../types';
 import { callLLM } from '../services/llmService';
 import { fetchGitHubRepoDetailed } from '../utils/githubFetcher';
+import { parseDoc, parseQuestions } from '../utils/llmParser';
 import { buildClarificationPrompt, buildDocPrompt } from '../utils/promptBuilder';
 
 export interface UseDocGeneratorResult {
@@ -26,36 +27,6 @@ function getConfig(): LLMConfig {
     provider: import.meta.env.VITE_LLM_PROVIDER || 'ollama',
     ollamaModel: import.meta.env.VITE_OLLAMA_MODEL,
     ollamaBaseUrl: import.meta.env.VITE_OLLAMA_BASE_URL,
-  };
-}
-
-function parseQuestions(raw: string): ClarificationQuestion[] {
-  const match = raw.match(/\[[\s\S]*\]/);
-  if (!match) throw new Error('LLM did not return a JSON array of questions');
-  const parsed = JSON.parse(match[0]) as Array<{ id?: string; question: string }>;
-  return parsed.map((q, i) => ({
-    id: q.id || 'q' + (i + 1),
-    question: q.question,
-  }));
-}
-
-function parseDoc(markdown: string): GeneratedDoc {
-  const lines = markdown.split('\n');
-  const sections: { title: string; content: string }[] = [];
-  let current: { title: string; content: string } | null = null;
-  for (const line of lines) {
-    const m = line.match(/^##\s+(.+)$/);
-    if (m) {
-      if (current) sections.push(current);
-      current = { title: m[1], content: '' };
-    } else if (current) {
-      current.content += line + '\n';
-    }
-  }
-  if (current) sections.push(current);
-  return {
-    sections: sections.map(s => ({ title: s.title, content: s.content.trim() })),
-    markdown,
   };
 }
 
