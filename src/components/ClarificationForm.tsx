@@ -142,32 +142,6 @@ export function ClarificationForm({ questions, onSubmit, onBack, isLoading = fal
             </button>
           </div>
         </section>
-
-        <aside className="right-rail-card">
-          <div className="right-label">PREVIEW</div>
-          <div className="preview-section">
-            <div className="k">QUESTIONS</div>
-            <div className="v">
-              <span className="pill">{questions.length}</span>
-            </div>
-          </div>
-          <div className="preview-section">
-            <div className="k">ANSWERED</div>
-            <div className="v">
-              <span className={`pill ${answeredCount === questions.length ? '' : 'muted'}`}>
-                {answeredCount}/{questions.length}
-              </span>
-            </div>
-          </div>
-          {questions.map((q, i) => (
-            <div key={q.id} className="preview-section">
-              <div className="k">Q{pad(i + 1)}</div>
-              <div className={`v ${answers[q.id]?.trim() ? '' : 'empty'}`}>
-                {answers[q.id]?.trim() || 'Unanswered'}
-              </div>
-            </div>
-          ))}
-        </aside>
       </div>
 
       {import.meta.env.DEV && questions.length > 0 && (
