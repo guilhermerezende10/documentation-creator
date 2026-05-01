@@ -1,6 +1,6 @@
 import type { ClarificationAnswer, ClarificationQuestion, InputData } from '../types';
 
-const MAX_CODE_BYTES = 80_000;
+const MAX_CODE_CHARS = 80_000;
 
 export type Language =
   | 'TypeScript'
@@ -37,22 +37,22 @@ export function detectLanguage(code: string): Language {
   return 'unknown';
 }
 
-function truncateCode(code: string): { code: string; truncated: boolean; omittedBytes: number } {
-  if (code.length <= MAX_CODE_BYTES) {
-    return { code, truncated: false, omittedBytes: 0 };
+function truncateCode(code: string): { code: string; truncated: boolean; omittedChars: number } {
+  if (code.length <= MAX_CODE_CHARS) {
+    return { code, truncated: false, omittedChars: 0 };
   }
-  const omitted = code.length - MAX_CODE_BYTES;
-  const head = code.slice(0, MAX_CODE_BYTES);
+  const omitted = code.length - MAX_CODE_CHARS;
+  const head = code.slice(0, MAX_CODE_CHARS);
   return {
-    code: `${head}\n\n[... source truncated to fit prompt budget; ${omitted} bytes omitted ...]`,
+    code: `${head}\n\n[... source truncated to fit prompt budget; ${omitted} characters omitted ...]`,
     truncated: true,
-    omittedBytes: omitted,
+    omittedChars: omitted,
   };
 }
 
 function describeSource(input: InputData): string {
   const raw = input.code ?? '';
-  const { code, truncated, omittedBytes } = truncateCode(raw);
+  const { code, truncated, omittedChars } = truncateCode(raw);
   const language = detectLanguage(raw);
 
   const lines: string[] = [];
@@ -65,7 +65,7 @@ function describeSource(input: InputData): string {
     lines.push(`Detected language: ${language}`);
   }
   if (truncated) {
-    lines.push(`Note: source was truncated to ${MAX_CODE_BYTES} bytes (${omittedBytes} omitted).`);
+    lines.push(`Note: source was truncated to ${MAX_CODE_CHARS} characters (${omittedChars} omitted).`);
   }
   lines.push('', 'Code:', '```', code, '```');
   return lines.join('\n');
