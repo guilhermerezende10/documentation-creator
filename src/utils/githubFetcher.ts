@@ -32,7 +32,7 @@ interface RepoCoords {
   repo: string;
 }
 
-interface TreeEntry {
+export interface TreeEntry {
   path: string;
   type: string;
   size?: number;
@@ -50,7 +50,7 @@ export interface FetchResult {
   truncated: boolean;
 }
 
-function parseRepoUrl(url: string): RepoCoords {
+export function parseRepoUrl(url: string): RepoCoords {
   const trimmed = url.trim().replace(/\/$/, '');
   const match = trimmed.match(
     /^https:\/\/github\.com\/([\w.-]+)\/([\w.-]+?)(?:\.git)?$/i,
@@ -59,7 +59,7 @@ function parseRepoUrl(url: string): RepoCoords {
   return { owner: match[1], repo: match[2] };
 }
 
-function shouldKeepEntry(entry: TreeEntry): boolean {
+export function shouldKeepEntry(entry: TreeEntry): boolean {
   if (entry.type !== 'blob') return false;
   const parts = entry.path.split('/');
   for (let i = 0; i < parts.length - 1; i++) {
@@ -75,7 +75,7 @@ function shouldKeepEntry(entry: TreeEntry): boolean {
   return SOURCE_EXTENSIONS.has(ext);
 }
 
-function priorityScore(path: string): number {
+export function priorityScore(path: string): number {
   const lower = path.toLowerCase();
   if (lower === 'readme.md' || lower === 'readme') return 0;
   if (

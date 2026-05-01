@@ -1,6 +1,6 @@
 import type { ClarificationAnswer, ClarificationQuestion, InputData } from '../types';
 
-const MAX_CODE_CHARS = 80_000;
+export const MAX_CODE_CHARS = 80_000;
 
 export type Language =
   | 'TypeScript'
@@ -37,7 +37,7 @@ export function detectLanguage(code: string): Language {
   return 'unknown';
 }
 
-function truncateCode(code: string): { code: string; truncated: boolean; omittedChars: number } {
+export function truncateCode(code: string): { code: string; truncated: boolean; omittedChars: number } {
   if (code.length <= MAX_CODE_CHARS) {
     return { code, truncated: false, omittedChars: 0 };
   }
