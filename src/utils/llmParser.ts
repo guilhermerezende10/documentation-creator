@@ -6,12 +6,12 @@ function stripCodeFence(raw: string): string {
   return fenced ? fenced[1].trim() : trimmed;
 }
 
-function extractJsonArray(raw: string): string {
+function extractJsonArray(raw: string, what: string): string {
   const cleaned = stripCodeFence(raw);
   const start = cleaned.indexOf('[');
   const end = cleaned.lastIndexOf(']');
   if (start === -1 || end === -1 || end < start) {
-    throw new Error('LLM did not return a JSON array of questions');
+    throw new Error(`LLM did not return a JSON array of ${what}`);
   }
   return cleaned.slice(start, end + 1);
 }
@@ -22,7 +22,7 @@ interface RawQuestion {
 }
 
 export function parseQuestions(raw: string): ClarificationQuestion[] {
-  const jsonText = extractJsonArray(raw);
+  const jsonText = extractJsonArray(raw, 'questions');
 
   let parsed: unknown;
   try {
@@ -60,7 +60,7 @@ interface RawSuggestion {
 }
 
 export function parseSuggestions(raw: string): Record<string, string> {
-  const jsonText = extractJsonArray(raw);
+  const jsonText = extractJsonArray(raw, 'suggestions');
 
   let parsed: unknown;
   try {
