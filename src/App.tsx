@@ -1,25 +1,32 @@
-import { useState } from 'react';
-import { FileInput } from './components/FileInput';
-import { ClarificationForm } from './components/ClarificationForm';
-import { ProgressBar } from './components/ProgressBar';
-import { DocOutput } from './components/DocOutput';
-import { useDocGenerator } from './hooks/useDocGenerator';
-import type { Phase, InputData, ClarificationAnswer, Progress } from './types';
+import { useState } from "react";
+import { FileInput } from "./components/FileInput";
+import { ClarificationForm } from "./components/ClarificationForm";
+import { ProgressBar } from "./components/ProgressBar";
+import { DocOutput } from "./components/DocOutput";
+import { useDocGenerator } from "./hooks/useDocGenerator";
+import type { Phase, InputData, ClarificationAnswer, Progress } from "./types";
 
-const FALLBACK_PROGRESS: Progress = { step: 'Working', percent: 0 };
+const FALLBACK_PROGRESS: Progress = { step: "Working", percent: 0 };
 
 function App() {
-  const [phase, setPhase] = useState<Phase>('input');
+  const [phase, setPhase] = useState<Phase>("input");
   const [error, setError] = useState<string | null>(null);
-  const { progress, questions, doc, isLoading, startGeneration, submitAnswers, reset } =
-    useDocGenerator();
+  const {
+    progress,
+    questions,
+    doc,
+    isLoading,
+    startGeneration,
+    submitAnswers,
+    reset,
+  } = useDocGenerator();
 
   const handleInputSubmit = async (data: InputData) => {
     if (isLoading) return;
     setError(null);
     try {
       await startGeneration(data);
-      setPhase('clarification');
+      setPhase("clarification");
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     }
@@ -28,24 +35,24 @@ function App() {
   const handleAnswersSubmit = async (answers: ClarificationAnswer[]) => {
     if (isLoading) return;
     setError(null);
-    setPhase('running');
+    setPhase("running");
     try {
       await submitAnswers(answers);
-      setPhase('output');
+      setPhase("output");
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
-      setPhase('clarification');
+      setPhase("clarification");
     }
   };
 
   const handleReset = () => {
     reset();
     setError(null);
-    setPhase('input');
+    setPhase("input");
   };
 
   const handleBack = () => {
-    setPhase('input');
+    setPhase("input");
   };
 
   return (
@@ -60,7 +67,7 @@ function App() {
         <div className="topbar-meta">
           <span>
             <span className="dot" />
-            CLAUDE-H-4 / READY
+            LLAMA 3.1 / READY
           </span>
           <span className="ok">v1.0.4</span>
         </div>
@@ -72,22 +79,22 @@ function App() {
             <div
               role="alert"
               style={{
-                padding: '12px 16px',
+                padding: "12px 16px",
                 marginBottom: 16,
-                border: '1px solid #c54',
-                color: '#f99',
-                background: 'rgba(200, 60, 60, 0.08)',
-                fontFamily: 'monospace',
+                border: "1px solid #c54",
+                color: "#f99",
+                background: "rgba(200, 60, 60, 0.08)",
+                fontFamily: "monospace",
                 fontSize: 13,
               }}
             >
               ERROR — {error}
             </div>
           )}
-          {phase === 'input' && (
+          {phase === "input" && (
             <FileInput onSubmit={handleInputSubmit} isLoading={isLoading} />
           )}
-          {phase === 'clarification' && (
+          {phase === "clarification" && (
             <ClarificationForm
               questions={questions}
               onSubmit={handleAnswersSubmit}
@@ -95,10 +102,10 @@ function App() {
               isLoading={isLoading}
             />
           )}
-          {phase === 'running' && (
+          {phase === "running" && (
             <ProgressBar progress={progress ?? FALLBACK_PROGRESS} />
           )}
-          {phase === 'output' && <DocOutput doc={doc} onReset={handleReset} />}
+          {phase === "output" && <DocOutput doc={doc} onReset={handleReset} />}
         </main>
       </div>
 
