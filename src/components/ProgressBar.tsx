@@ -1,6 +1,19 @@
 import { useEffect, useState } from "react";
 import type { ProgressBarProps } from "../types";
 
+const ROTATING_MESSAGES = [
+  "Reading source structure",
+  "Identifying public exports",
+  "Drafting overview",
+  "Writing installation guide",
+  "Sketching usage examples",
+  "Generating API reference",
+  "Documenting deployment",
+  "Compiling troubleshooting tips",
+  "Polishing prose",
+  "Formatting markdown",
+];
+
 function formatElapsed(seconds: number): string {
   const m = Math.floor(seconds / 60).toString().padStart(2, "0");
   const s = (seconds % 60).toString().padStart(2, "0");
@@ -8,9 +21,10 @@ function formatElapsed(seconds: number): string {
 }
 
 export function ProgressBar({ progress, onComplete }: ProgressBarProps) {
-  const percent = Math.min(100, Math.max(0, progress.percent));
+  const [displayPercent, setDisplayPercent] = useState(0);
   const [elapsed, setElapsed] = useState(0);
   const [showFallback, setShowFallback] = useState(false);
+  const [rotatingIndex, setRotatingIndex] = useState(0);
 
   useEffect(() => {
     const start = Date.now();
@@ -24,6 +38,25 @@ export function ProgressBar({ progress, onComplete }: ProgressBarProps) {
     const t = setTimeout(() => setShowFallback(true), 2000);
     return () => clearTimeout(t);
   }, []);
+
+  useEffect(() => {
+    if (progress.percent >= 100) setDisplayPercent(100);
+  }, [progress.percent]);
+
+  useEffect(() => {
+    const rot = setInterval(() => {
+      setRotatingIndex((i) => (i + 1) % ROTATING_MESSAGES.length);
+      setDisplayPercent((d) => {
+        if (d >= 100) return 100;
+        const jump = Math.random() < 0.5 ? 20 : 30;
+        return Math.min(95, d + jump);
+      });
+    }, 2200);
+    return () => clearInterval(rot);
+  }, []);
+
+  const rotatingMessage = ROTATING_MESSAGES[rotatingIndex];
+  const shownPercent = Math.round(displayPercent);
 
   return (
     <div className="phase-enter run-shell">
@@ -57,17 +90,20 @@ export function ProgressBar({ progress, onComplete }: ProgressBarProps) {
 
         <div className="progress-row">
           <span>PROGRESS — {progress.step}</span>
-          <span className="v">{percent}%</span>
+          <span className="v">{shownPercent}%</span>
         </div>
         <div className="progress" style={{ marginBottom: 24 }}>
-          <div className="bar" style={{ width: `${percent}%` }} />
+          <div
+            className="bar"
+            style={{ width: `${displayPercent}%`, transition: "width 180ms ease-out" }}
+          />
         </div>
 
         <div className="section-list">
           <div className="section-row running">
             <span className="spinner" aria-hidden="true" />
             <div className="info">
-              <div className="name">GENERATING DOCUMENTATION</div>
+              <div className="name">{rotatingMessage}</div>
               <div className="desc">{progress.step}</div>
             </div>
             <div className="status">RUNNING</div>
@@ -76,7 +112,7 @@ export function ProgressBar({ progress, onComplete }: ProgressBarProps) {
 
         <div className="console">
           <div className="line">
-            <span className="ok">→</span> {progress.step}
+            <span className="ok">→</span> {rotatingMessage}
             <span className="cursor" />
           </div>
         </div>

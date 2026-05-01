@@ -52,7 +52,9 @@ function App() {
   };
 
   useEffect(() => {
-    if (doc) setPhase("output");
+    if (!doc) return;
+    const t = setTimeout(() => setPhase("output"), 700);
+    return () => clearTimeout(t);
   }, [doc]);
 
   const handleBack = () => {
