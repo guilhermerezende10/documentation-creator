@@ -1,15 +1,20 @@
-import { useState } from 'react';
-import type { ClarificationAnswer, ClarificationFormProps } from '../types';
+import { useState } from "react";
+import type { ClarificationAnswer, ClarificationFormProps } from "../types";
 
 const SAMPLE_ANSWERS: string[] = [
-  'Beginner Python students learning control flow and basic numeric algorithms. The docs should explain each menu option in plain language without assuming prior CS background.',
-  'menu-numerico — a small interactive CLI that lets the user pick from six classic numeric exercises (factorial, Fibonacci, digit reversal, geometric progression, palindrome check, digit sum) via a numbered menu.',
+  "Beginner Python students learning control flow and basic numeric algorithms. The docs should explain each menu option in plain language without assuming prior CS background.",
+  "menu-numerico — a small interactive CLI that lets the user pick from six classic numeric exercises (factorial, Fibonacci, digit reversal, geometric progression, palindrome check, digit sum) via a numbered menu.",
   'No installation. Requires Python 3.7+. Run with "python menu_numerico.py". Standard library only — uses "time" for cosmetic delays between menu screens.',
-  'Six standalone functions exposed via the menu: calcular_fatorial, gerar_fibonacci, inverter_digitos, progressao_geometrica, verificar_palindromo, soma_digitos. All take input from stdin interactively — no parameters, no return values. main() is the entry loop; exibe_menu() prints the option list.',
-  'Inputs are not validated for negative numbers (factorial and palindrome silently misbehave for non-positive input). time.sleep calls add ~3s between actions and are not configurable. UI text is in Portuguese. No tests, no logging. Interactive input() requires a TTY — will not run in non-interactive environments.',
+  "Six standalone functions exposed via the menu: calcular_fatorial, gerar_fibonacci, inverter_digitos, progressao_geometrica, verificar_palindromo, soma_digitos. All take input from stdin interactively — no parameters, no return values. main() is the entry loop; exibe_menu() prints the option list.",
+  "Inputs are not validated for negative numbers (factorial and palindrome silently misbehave for non-positive input). time.sleep calls add ~3s between actions and are not configurable. UI text is in Portuguese. No tests, no logging. Interactive input() requires a TTY — will not run in non-interactive environments.",
 ];
 
-export function ClarificationForm({ questions, onSubmit, onBack, isLoading = false }: ClarificationFormProps) {
+export function ClarificationForm({
+  questions,
+  onSubmit,
+  onBack,
+  isLoading = false,
+}: ClarificationFormProps) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
   const fillSampleData = () => {
@@ -35,12 +40,12 @@ export function ClarificationForm({ questions, onSubmit, onBack, isLoading = fal
     if (!ready || isLoading) return;
     const payload: ClarificationAnswer[] = questions.map((q) => ({
       questionId: q.id,
-      answer: answers[q.id] ?? '',
+      answer: answers[q.id] ?? "",
     }));
     onSubmit(payload);
   };
 
-  const pad = (n: number) => String(n).padStart(2, '0');
+  const pad = (n: number) => String(n).padStart(2, "0");
 
   return (
     <div className="phase-enter">
@@ -72,7 +77,7 @@ export function ClarificationForm({ questions, onSubmit, onBack, isLoading = fal
           <div className="rail-foot">
             <div>
               <span>MODEL</span>
-              <span className="v">CLAUDE-H-4</span>
+              <span className="v">LLAMA 3.1</span>
             </div>
             <div>
               <span>STATUS</span>
@@ -88,7 +93,7 @@ export function ClarificationForm({ questions, onSubmit, onBack, isLoading = fal
           </div>
 
           {questions.length === 0 && (
-            <div className="field-hint" style={{ padding: '12px 0' }}>
+            <div className="field-hint" style={{ padding: "12px 0" }}>
               No questions returned by the model.
             </div>
           )}
@@ -107,7 +112,7 @@ export function ClarificationForm({ questions, onSubmit, onBack, isLoading = fal
                     id={inputId}
                     className="text-input ta"
                     placeholder="Your answer..."
-                    value={answers[q.id] ?? ''}
+                    value={answers[q.id] ?? ""}
                     onChange={(e) => handleChange(q.id, e.target.value)}
                   />
                 </div>
@@ -137,7 +142,7 @@ export function ClarificationForm({ questions, onSubmit, onBack, isLoading = fal
                   GENERATING…
                 </>
               ) : (
-                'GENERATE →'
+                "GENERATE →"
               )}
             </button>
           </div>
@@ -150,20 +155,20 @@ export function ClarificationForm({ questions, onSubmit, onBack, isLoading = fal
           onClick={fillSampleData}
           title="Fill all answers with sample test data"
           style={{
-            position: 'fixed',
+            position: "fixed",
             bottom: 24,
             right: 24,
             zIndex: 1000,
-            padding: '12px 18px',
-            border: '1px solid #6c8',
-            background: 'rgba(20, 40, 30, 0.95)',
-            color: '#9fc',
-            fontFamily: 'monospace',
+            padding: "12px 18px",
+            border: "1px solid #6c8",
+            background: "rgba(20, 40, 30, 0.95)",
+            color: "#9fc",
+            fontFamily: "monospace",
             fontSize: 12,
-            letterSpacing: '0.05em',
-            cursor: 'pointer',
+            letterSpacing: "0.05em",
+            cursor: "pointer",
             borderRadius: 4,
-            boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+            boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
           }}
         >
           🧪 FILL TEST DATA
