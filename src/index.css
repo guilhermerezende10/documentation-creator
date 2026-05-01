@@ -61,6 +61,7 @@ button{cursor:pointer}
 .topbar-meta .ok{color:var(--accent)}
 .topbar-meta .dot{display:inline-block;width:6px;height:6px;background:var(--accent);margin-right:6px;vertical-align:1px;box-shadow:0 0 8px var(--accent)}
 .topbar-meta .dot.bad{background:var(--bad);box-shadow:0 0 8px var(--bad)}
+.topbar-meta .dot.pending{background:var(--text-muted);box-shadow:none}
 .topbar.offline .topbar-line::after{background:var(--bad)}
 
 .app{position:relative;z-index:1;min-height:100vh}

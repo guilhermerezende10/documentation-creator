@@ -6,12 +6,12 @@ function stripCodeFence(raw: string): string {
   return fenced ? fenced[1].trim() : trimmed;
 }
 
-function extractJsonArray(raw: string): string {
+function extractJsonArray(raw: string, what: string): string {
   const cleaned = stripCodeFence(raw);
   const start = cleaned.indexOf('[');
   const end = cleaned.lastIndexOf(']');
   if (start === -1 || end === -1 || end < start) {
-    throw new Error('LLM did not return a JSON array of questions');
+    throw new Error(`LLM did not return a JSON array of ${what}`);
   }
   return cleaned.slice(start, end + 1);
 }
@@ -22,7 +22,7 @@ interface RawQuestion {
 }
 
 export function parseQuestions(raw: string): ClarificationQuestion[] {
-  const jsonText = extractJsonArray(raw);
+  const jsonText = extractJsonArray(raw, 'questions');
 
   let parsed: unknown;
   try {
@@ -37,15 +37,23 @@ export function parseQuestions(raw: string): ClarificationQuestion[] {
   }
 
   const questions: ClarificationQuestion[] = [];
+  const usedIds = new Set<string>();
   for (let i = 0; i < parsed.length; i++) {
     const item = parsed[i] as RawQuestion;
     const question = typeof item?.question === 'string' ? item.question.trim() : '';
     if (!question) continue;
-    const rawId = typeof item?.id === 'string' ? item.id.trim() : '';
-    questions.push({
-      id: rawId || `q${questions.length + 1}`,
-      question,
-    });
+    let id = typeof item?.id === 'string' ? item.id.trim() : '';
+    if (!id || usedIds.has(id)) {
+      let n = questions.length + 1;
+      let candidate = `q${n}`;
+      while (usedIds.has(candidate)) {
+        n++;
+        candidate = `q${n}`;
+      }
+      id = candidate;
+    }
+    usedIds.add(id);
+    questions.push({ id, question });
   }
 
   if (questions.length === 0) {
@@ -60,7 +68,7 @@ interface RawSuggestion {
 }
 
 export function parseSuggestions(raw: string): Record<string, string> {
-  const jsonText = extractJsonArray(raw);
+  const jsonText = extractJsonArray(raw, 'suggestions');
 
   let parsed: unknown;
   try {

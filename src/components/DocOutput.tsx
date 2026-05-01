@@ -30,23 +30,19 @@ function nodeText(node: ReactNode): string {
   return '';
 }
 
-const headingComponents: Components = {
-  h1: ({ children, ...props }) => (
-    <h1 id={slugify(nodeText(children))} {...props}>
-      {children}
-    </h1>
-  ),
-  h2: ({ children, ...props }) => (
-    <h2 id={slugify(nodeText(children))} {...props}>
-      {children}
-    </h2>
-  ),
-  h3: ({ children, ...props }) => (
-    <h3 id={slugify(nodeText(children))} {...props}>
-      {children}
-    </h3>
-  ),
-};
+function buildH2LineToId(markdown: string): Map<number, string> {
+  const map = new Map<number, string>();
+  const counts = new Map<string, number>();
+  markdown.split('\n').forEach((line, idx) => {
+    const m = line.match(/^##\s+(.+)$/);
+    if (!m) return;
+    const slug = slugify(m[1].trim());
+    const count = counts.get(slug) ?? 0;
+    counts.set(slug, count + 1);
+    map.set(idx + 1, count === 0 ? slug : `${slug}-${count}`);
+  });
+  return map;
+}
 
 function scrollToHeading(id: string) {
   const el = document.getElementById(id);
@@ -70,6 +66,17 @@ export function DocOutput({ doc, onReset }: DocOutputProps) {
   const [activeTab, setActiveTab] = useState<string>(FULL_TAB_ID);
   const [pendingScrollId, setPendingScrollId] = useState<string | null>(null);
 
+  const sectionAnchors = useMemo<string[]>(() => {
+    if (!doc) return [];
+    const counts = new Map<string, number>();
+    return doc.sections.map((s) => {
+      const slug = slugify(s.title);
+      const count = counts.get(slug) ?? 0;
+      counts.set(slug, count + 1);
+      return count === 0 ? slug : `${slug}-${count}`;
+    });
+  }, [doc]);
+
   useEffect(() => {
     if (tabs.length > 0 && !tabs.some((t) => t.id === activeTab)) {
       setActiveTab(tabs[0].id);
@@ -85,8 +92,9 @@ export function DocOutput({ doc, onReset }: DocOutputProps) {
   }, [pendingScrollId, activeTab]);
 
   const handleTocClick = useCallback(
-    (title: string) => {
-      const id = slugify(title);
+    (sectionIndex: number) => {
+      const id = sectionAnchors[sectionIndex];
+      if (!id) return;
       if (activeTab !== FULL_TAB_ID) {
         setPendingScrollId(id);
         setActiveTab(FULL_TAB_ID);
@@ -94,10 +102,35 @@ export function DocOutput({ doc, onReset }: DocOutputProps) {
         scrollToHeading(id);
       }
     },
-    [activeTab],
+    [activeTab, sectionAnchors],
   );
 
   const active = tabs.find((t) => t.id === activeTab) ?? tabs[0];
+
+  const headingComponents = useMemo<Components>(() => {
+    const lineToId = active ? buildH2LineToId(active.markdown) : new Map<number, string>();
+    return {
+      h1: ({ children, ...props }) => (
+        <h1 id={slugify(nodeText(children))} {...props}>
+          {children}
+        </h1>
+      ),
+      h2: ({ children, node, ...props }) => {
+        const line = node?.position?.start?.line;
+        const id = (line !== undefined && lineToId.get(line)) || slugify(nodeText(children));
+        return (
+          <h2 id={id} {...props}>
+            {children}
+          </h2>
+        );
+      },
+      h3: ({ children, ...props }) => (
+        <h3 id={slugify(nodeText(children))} {...props}>
+          {children}
+        </h3>
+      ),
+    };
+  }, [active?.markdown]);
   const sectionCount = doc?.sections.length ?? 0;
   const lineCount = doc?.markdown.split('\n').length ?? 0;
   const filename =
@@ -179,9 +212,9 @@ export function DocOutput({ doc, onReset }: DocOutputProps) {
         <aside className="doc-toc">
           <div className="label">CONTENTS</div>
           <ol>
-            {doc?.sections.map((s) => (
-              <li key={s.title}>
-                <button type="button" onClick={() => handleTocClick(s.title)}>
+            {doc?.sections.map((s, i) => (
+              <li key={i}>
+                <button type="button" onClick={() => handleTocClick(i)}>
                   {s.title}
                 </button>
               </li>

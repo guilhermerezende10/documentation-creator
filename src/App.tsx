@@ -40,7 +40,8 @@ function App() {
   );
   const llmStatus = useLLMStatus(llmConfig);
   const isOffline = llmStatus === "offline";
-  const statusLabel = isOffline ? "OFFLINE" : "READY";
+  const isChecking = llmStatus === "unknown";
+  const statusLabel = isOffline ? "OFFLINE" : isChecking ? "CHECKING" : "READY";
 
   const handleInputSubmit = async (data: InputData) => {
     if (isLoading) return;
@@ -104,7 +105,12 @@ function App() {
         <div className="topbar-line" />
         <div className="topbar-meta">
           <span>
-            <span className={"dot" + (isOffline ? " bad" : "")} />
+            <span
+              className={
+                "dot" +
+                (isOffline ? " bad" : isChecking ? " pending" : "")
+              }
+            />
             LLAMA 3.1 / {statusLabel}
           </span>
           <span className="ok">v1.0.4</span>
