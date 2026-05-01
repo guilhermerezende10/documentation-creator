@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FileInput } from "./components/FileInput";
 import { ClarificationForm } from "./components/ClarificationForm";
 import { ProgressBar } from "./components/ProgressBar";
@@ -50,6 +50,12 @@ function App() {
     setError(null);
     setPhase("input");
   };
+
+  useEffect(() => {
+    if (!doc) return;
+    const t = setTimeout(() => setPhase("output"), 700);
+    return () => clearTimeout(t);
+  }, [doc]);
 
   const handleBack = () => {
     setPhase("input");
@@ -103,7 +109,10 @@ function App() {
             />
           )}
           {phase === "running" && (
-            <ProgressBar progress={progress ?? FALLBACK_PROGRESS} />
+            <ProgressBar
+              progress={progress ?? FALLBACK_PROGRESS}
+              onComplete={doc ? () => setPhase("output") : undefined}
+            />
           )}
           {phase === "output" && <DocOutput doc={doc} onReset={handleReset} />}
         </main>
