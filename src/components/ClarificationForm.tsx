@@ -1,29 +1,29 @@
 import { useState } from "react";
 import type { ClarificationAnswer, ClarificationFormProps } from "../types";
 
-const SAMPLE_ANSWERS: string[] = [
-  "Beginner Python students learning control flow and basic numeric algorithms. The docs should explain each menu option in plain language without assuming prior CS background.",
-  "menu-numerico — a small interactive CLI that lets the user pick from six classic numeric exercises (factorial, Fibonacci, digit reversal, geometric progression, palindrome check, digit sum) via a numbered menu.",
-  'No installation. Requires Python 3.7+. Run with "python menu_numerico.py". Standard library only — uses "time" for cosmetic delays between menu screens.',
-  "Six standalone functions exposed via the menu: calcular_fatorial, gerar_fibonacci, inverter_digitos, progressao_geometrica, verificar_palindromo, soma_digitos. All take input from stdin interactively — no parameters, no return values. main() is the entry loop; exibe_menu() prints the option list.",
-  "Inputs are not validated for negative numbers (factorial and palindrome silently misbehave for non-positive input). time.sleep calls add ~3s between actions and are not configurable. UI text is in Portuguese. No tests, no logging. Interactive input() requires a TTY — will not run in non-interactive environments.",
-];
-
 export function ClarificationForm({
   questions,
   onSubmit,
   onBack,
   isLoading = false,
+  isSuggesting = false,
+  onSuggestAnswers,
 }: ClarificationFormProps) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
-  const fillSampleData = () => {
-    const filled: Record<string, string> = {};
-    questions.forEach((q, i) => {
-      filled[q.id] =
-        SAMPLE_ANSWERS[i] ?? SAMPLE_ANSWERS[SAMPLE_ANSWERS.length - 1];
+  const handleSuggest = async () => {
+    if (!onSuggestAnswers || isSuggesting || isLoading) return;
+    const suggestions = await onSuggestAnswers();
+    setAnswers((prev) => {
+      const next = { ...prev };
+      for (const q of questions) {
+        const text = suggestions[q.id];
+        if (typeof text === "string" && text.trim()) {
+          next[q.id] = text;
+        }
+      }
+      return next;
     });
-    setAnswers(filled);
   };
 
   const answeredCount = questions.reduce(
@@ -37,7 +37,7 @@ export function ClarificationForm({
   };
 
   const handleSubmit = () => {
-    if (!ready || isLoading) return;
+    if (!ready || isLoading || isSuggesting) return;
     const payload: ClarificationAnswer[] = questions.map((q) => ({
       questionId: q.id,
       answer: answers[q.id] ?? "",
@@ -125,14 +125,14 @@ export function ClarificationForm({
               type="button"
               className="btn-back"
               onClick={onBack}
-              disabled={isLoading}
+              disabled={isLoading || isSuggesting}
             >
               ← BACK
             </button>
             <button
               type="button"
               className="btn-go"
-              disabled={!ready || isLoading}
+              disabled={!ready || isLoading || isSuggesting}
               onClick={handleSubmit}
               aria-busy={isLoading}
             >
@@ -149,29 +149,23 @@ export function ClarificationForm({
         </section>
       </div>
 
-      {import.meta.env.DEV && questions.length > 0 && (
+      {questions.length > 0 && onSuggestAnswers && (
         <button
           type="button"
-          onClick={fillSampleData}
-          title="Fill all answers with sample test data"
-          style={{
-            position: "fixed",
-            bottom: 24,
-            right: 24,
-            zIndex: 1000,
-            padding: "12px 18px",
-            border: "1px solid #6c8",
-            background: "rgba(20, 40, 30, 0.95)",
-            color: "#9fc",
-            fontFamily: "monospace",
-            fontSize: 12,
-            letterSpacing: "0.05em",
-            cursor: "pointer",
-            borderRadius: 4,
-            boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
-          }}
+          className="suggest-fab"
+          onClick={handleSuggest}
+          disabled={isSuggesting || isLoading}
+          aria-busy={isSuggesting}
+          title="Use the LLM to draft an answer for each question"
         >
-          🧪 FILL TEST DATA
+          {isSuggesting ? (
+            <>
+              <span className="spinner" aria-hidden="true" />
+              SUGGESTING…
+            </>
+          ) : (
+            "✨ SUGGEST ANSWERS"
+          )}
         </button>
       )}
     </div>

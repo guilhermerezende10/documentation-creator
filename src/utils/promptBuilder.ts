@@ -1,4 +1,4 @@
-import type { ClarificationAnswer, InputData } from '../types';
+import type { ClarificationAnswer, ClarificationQuestion, InputData } from '../types';
 
 const MAX_CODE_BYTES = 80_000;
 
@@ -93,6 +93,37 @@ export function buildClarificationPrompt(input: InputData): string {
     '',
     'Example exact output:',
     '[{"id":"q1","question":"Who is the target audience?"},{"id":"q2","question":"What runtime version is required?"}]',
+  ].join('\n');
+}
+
+export function buildAnswerSuggestionPrompt(
+  input: InputData,
+  questions: ClarificationQuestion[],
+): string {
+  const questionLines = questions
+    .map((q) => `- ${q.id}: ${q.question}`)
+    .join('\n');
+
+  return [
+    'You are a senior technical writer studying the codebase below to draft answers',
+    'to clarification questions a documentation writer would otherwise ask the project owner.',
+    'Ground every answer in concrete details from the source — real file/function/class names,',
+    'imports, config values. If the source is genuinely silent on a point, infer the most likely',
+    'answer and keep it short rather than fabricating specifics.',
+    '',
+    describeSource(input),
+    '',
+    'Questions:',
+    questionLines,
+    '',
+    'Output format (STRICT):',
+    'Return ONLY a JSON array. No prose, no markdown fences, no commentary before or after.',
+    'Each item must be an object with shape {"questionId": "<id>", "answer": "<text>"}.',
+    'Use the exact question IDs above. Provide one entry per question. Keep each answer concise',
+    '(2 to 4 sentences) and self-contained.',
+    '',
+    'Example exact output:',
+    '[{"questionId":"q1","answer":"The target audience is ..."},{"questionId":"q2","answer":"Requires Node 18+ ..."}]',
   ].join('\n');
 }
 

@@ -54,6 +54,35 @@ export function parseQuestions(raw: string): ClarificationQuestion[] {
   return questions;
 }
 
+interface RawSuggestion {
+  questionId?: unknown;
+  answer?: unknown;
+}
+
+export function parseSuggestions(raw: string): Record<string, string> {
+  const jsonText = extractJsonArray(raw);
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(jsonText);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    throw new Error(`Could not parse suggestions JSON: ${msg}`);
+  }
+
+  if (!Array.isArray(parsed)) {
+    throw new Error('Suggestions payload was not a JSON array');
+  }
+
+  const out: Record<string, string> = {};
+  for (const item of parsed as RawSuggestion[]) {
+    const id = typeof item?.questionId === 'string' ? item.questionId.trim() : '';
+    const answer = typeof item?.answer === 'string' ? item.answer.trim() : '';
+    if (id && answer) out[id] = answer;
+  }
+  return out;
+}
+
 function unwrapDocFence(raw: string): string {
   const trimmed = raw.trim();
   const fenced = trimmed.match(/^```(?:markdown|md)?\s*\n([\s\S]*?)\n?```\s*$/i);

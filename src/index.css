@@ -171,6 +171,22 @@ button{cursor:pointer}
 }
 @keyframes spin{to{transform:rotate(360deg)}}
 
+.suggest-fab{
+  position:fixed;bottom:24px;right:24px;z-index:1000;
+  display:inline-flex;align-items:center;gap:10px;
+  padding:12px 18px;
+  background:rgba(20,28,52,.95);
+  border:1px solid var(--accent-2);color:var(--accent-2);
+  font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;
+  box-shadow:0 4px 18px rgba(110,138,255,.18);
+  transition:filter 150ms,transform 150ms,box-shadow 200ms;
+}
+.suggest-fab:hover:not(:disabled){
+  filter:brightness(1.1);transform:translateY(-1px);
+  box-shadow:0 4px 28px rgba(110,138,255,.32);
+}
+.suggest-fab:disabled{opacity:.6;cursor:not-allowed}
+
 .micro{
   display:flex;gap:14px;justify-content:center;margin-top:14px;max-width:920px;
   font-size:11px;color:var(--text-muted);letter-spacing:.12em;text-transform:uppercase;

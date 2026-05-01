@@ -16,8 +16,10 @@ function App() {
     questions,
     doc,
     isLoading,
+    isSuggesting,
     startGeneration,
     submitAnswers,
+    suggestAnswers,
     reset,
   } = useDocGenerator();
 
@@ -42,6 +44,17 @@ function App() {
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
       setPhase("clarification");
+    }
+  };
+
+  const handleSuggestAnswers = async (): Promise<Record<string, string>> => {
+    if (isLoading || isSuggesting) return {};
+    setError(null);
+    try {
+      return await suggestAnswers();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      return {};
     }
   };
 
@@ -100,6 +113,8 @@ function App() {
               onSubmit={handleAnswersSubmit}
               onBack={handleBack}
               isLoading={isLoading}
+              isSuggesting={isSuggesting}
+              onSuggestAnswers={handleSuggestAnswers}
             />
           )}
           {phase === "running" && (
