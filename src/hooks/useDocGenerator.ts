@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type {
   ClarificationAnswer,
   ClarificationQuestion,
@@ -30,6 +30,7 @@ export interface UseDocGeneratorResult {
     questions: ClarificationQuestion[];
     pendingInput: InputData;
   }) => void;
+  cancel: () => void;
   reset: () => void;
 }
 
@@ -48,8 +49,23 @@ export function useDocGenerator(): UseDocGeneratorResult {
   const [pendingInput, setPendingInput] = useState<InputData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuggesting, setIsSuggesting] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
+
+  function beginRequest(): AbortSignal {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    return controller.signal;
+  }
+
+  function endRequest(controllerSignal: AbortSignal) {
+    if (abortRef.current && abortRef.current.signal === controllerSignal) {
+      abortRef.current = null;
+    }
+  }
 
   async function startGeneration(data: InputData) {
+    const signal = beginRequest();
     try {
       setIsLoading(true);
       setProgress({ step: 'Loading source', percent: 10 });
@@ -82,43 +98,54 @@ export function useDocGenerator(): UseDocGeneratorResult {
       setProgress({ step: 'Analyzing code', percent: 35 });
 
       const prompt = buildClarificationPrompt(resolved);
-      const raw = await callLLM(prompt, getConfig());
+      const raw = await callLLM(prompt, getConfig(), { signal });
       setQuestions(parseQuestions(raw));
       setProgress({ step: 'Awaiting clarifications', percent: 50 });
     } finally {
       setIsLoading(false);
+      endRequest(signal);
     }
   }
 
   async function submitAnswers(answers: ClarificationAnswer[]) {
     if (!pendingInput) throw new Error('No input data; call startGeneration first');
+    const signal = beginRequest();
     try {
       setIsLoading(true);
       setProgress({ step: 'Generating documentation', percent: 70 });
       const prompt = buildDocPrompt(pendingInput, answers);
-      const raw = await callLLM(prompt, getConfig());
+      const raw = await callLLM(prompt, getConfig(), { signal });
       setProgress({ step: 'Formatting output', percent: 90 });
       setDoc(parseDoc(raw));
       setProgress({ step: 'Done', percent: 100 });
     } finally {
       setIsLoading(false);
+      endRequest(signal);
     }
   }
 
   async function suggestAnswers(): Promise<Record<string, string>> {
     if (!pendingInput) throw new Error('No input data; submit code first');
     if (questions.length === 0) return {};
+    const signal = beginRequest();
     try {
       setIsSuggesting(true);
       const prompt = buildAnswerSuggestionPrompt(pendingInput, questions);
-      const raw = await callLLM(prompt, getConfig());
+      const raw = await callLLM(prompt, getConfig(), { signal });
       return parseSuggestions(raw);
     } finally {
       setIsSuggesting(false);
+      endRequest(signal);
     }
   }
 
+  function cancel() {
+    abortRef.current?.abort();
+    abortRef.current = null;
+  }
+
   function reset() {
+    cancel();
     setProgress(null);
     setQuestions([]);
     setDoc(null);
@@ -146,6 +173,7 @@ export function useDocGenerator(): UseDocGeneratorResult {
     submitAnswers,
     suggestAnswers,
     hydrate,
+    cancel,
     reset,
   };
 }
