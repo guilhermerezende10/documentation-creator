@@ -1,5 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Fira+Code:wght@400;500&display=swap');
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>docgen — AI Documentation Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
 
+<style>
 :root{
   --bg:#0D0F12;--surface:#13161C;--code-bg:#0A0C0F;
   --border:#1E2330;--border-hi:#2A3042;
@@ -460,3 +469,34 @@ button{cursor:pointer}
   .run-card{padding:22px}
   .output-header .h1{font-size:30px}
 }
+</style>
+</head>
+<body>
+
+<div class="app-bg"></div>
+
+<header class="topbar">
+  <div class="logo"><span class="b">&lt;</span>docgen<span class="b">/&gt;</span></div>
+  <div class="topbar-line"></div>
+  <div class="topbar-meta">
+    <span><span class="dot"></span>CLAUDE-H-4 / READY</span>
+    <span class="ok">v1.0.4</span>
+  </div>
+</header>
+
+<div class="app">
+  <main class="shell" id="root"></main>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<!-- React + Babel -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="docgen.jsx"></script>
+
+</body>
+</html>

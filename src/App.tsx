@@ -1,117 +1,59 @@
-import { useEffect, useMemo, useState } from "react";
-import { FileInput } from "./components/FileInput";
-import { ClarificationForm } from "./components/ClarificationForm";
-import { ProgressBar } from "./components/ProgressBar";
-import { DocOutput } from "./components/DocOutput";
-import { useDocGenerator } from "./hooks/useDocGenerator";
-import { useLLMStatus } from "./hooks/useLLMStatus";
+import { useState } from 'react';
+import { FileInput } from './components/FileInput';
+import { ClarificationForm } from './components/ClarificationForm';
+import { ProgressBar } from './components/ProgressBar';
+import { DocOutput } from './components/DocOutput';
 import type {
   Phase,
   InputData,
   ClarificationAnswer,
+  ClarificationQuestion,
+  GeneratedDoc,
   Progress,
-  LLMConfig,
-} from "./types";
-
-const FALLBACK_PROGRESS: Progress = { step: "Working", percent: 0 };
+} from './types';
 
 function App() {
-  const [phase, setPhase] = useState<Phase>("input");
-  const [error, setError] = useState<string | null>(null);
-  const {
-    progress,
-    questions,
-    doc,
-    isLoading,
-    isSuggesting,
-    startGeneration,
-    submitAnswers,
-    suggestAnswers,
-    reset,
-  } = useDocGenerator();
+  const [phase, setPhase] = useState<Phase>('input');
+  const [, setInputData] = useState<InputData | null>(null);
+  const [questions] = useState<ClarificationQuestion[]>([]);
+  const [doc] = useState<GeneratedDoc | null>(null);
+  const [progress] = useState<Progress>({ step: 'API documentation', percent: 38 });
 
-  const llmConfig = useMemo<LLMConfig>(
-    () => ({
-      provider: import.meta.env.VITE_LLM_PROVIDER || "ollama",
-      ollamaModel: import.meta.env.VITE_OLLAMA_MODEL,
-      ollamaBaseUrl: import.meta.env.VITE_OLLAMA_BASE_URL,
-    }),
-    [],
-  );
-  const llmStatus = useLLMStatus(llmConfig);
-  const isOffline = llmStatus === "offline";
-  const isChecking = llmStatus === "unknown";
-  const statusLabel = isOffline ? "OFFLINE" : isChecking ? "CHECKING" : "READY";
-
-  const handleInputSubmit = async (data: InputData) => {
-    if (isLoading) return;
-    setError(null);
-    try {
-      await startGeneration(data);
-      setPhase("clarification");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    }
+  const handleInputSubmit = (data: InputData) => {
+    setInputData(data);
+    setPhase('clarification');
   };
 
-  const handleAnswersSubmit = async (answers: ClarificationAnswer[]) => {
-    if (isLoading) return;
-    setError(null);
-    setPhase("running");
-    try {
-      await submitAnswers(answers);
-      setPhase("output");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-      setPhase("clarification");
-    }
+  const handleAnswersSubmit = (_answers: ClarificationAnswer[]) => {
+    setPhase('running');
   };
 
-  const handleSuggestAnswers = async (): Promise<Record<string, string>> => {
-    if (isLoading || isSuggesting) return {};
-    setError(null);
-    try {
-      return await suggestAnswers();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-      return {};
-    }
+  const handleRunComplete = () => {
+    setPhase('output');
   };
 
   const handleReset = () => {
-    reset();
-    setError(null);
-    setPhase("input");
+    setPhase('input');
+    setInputData(null);
   };
 
-  useEffect(() => {
-    if (!doc) return;
-    const t = setTimeout(() => setPhase("output"), 700);
-    return () => clearTimeout(t);
-  }, [doc]);
-
   const handleBack = () => {
-    setPhase("input");
+    setPhase('input');
   };
 
   return (
     <>
       <div className="app-bg" />
 
-      <header className={"topbar" + (isOffline ? " offline" : "")}>
+      <header className="topbar">
         <div className="logo">
           <span className="b">&lt;</span>docgen<span className="b">/&gt;</span>
         </div>
         <div className="topbar-line" />
         <div className="topbar-meta">
           <span>
-            <span
-              className={
-                "dot" +
-                (isOffline ? " bad" : isChecking ? " pending" : "")
-              }
-            />
-            LLAMA 3.1 / {statusLabel}
+            <span className="dot" />
+            CLAUDE-H-4 / READY
           </span>
           <span className="ok">v1.0.4</span>
         </div>
@@ -119,42 +61,18 @@ function App() {
 
       <div className="app">
         <main className="shell">
-          {error && (
-            <div
-              role="alert"
-              style={{
-                padding: "12px 16px",
-                marginBottom: 16,
-                border: "1px solid #c54",
-                color: "#f99",
-                background: "rgba(200, 60, 60, 0.08)",
-                fontFamily: "monospace",
-                fontSize: 13,
-              }}
-            >
-              ERROR — {error}
-            </div>
-          )}
-          {phase === "input" && (
-            <FileInput onSubmit={handleInputSubmit} isLoading={isLoading} />
-          )}
-          {phase === "clarification" && (
+          {phase === 'input' && <FileInput onSubmit={handleInputSubmit} />}
+          {phase === 'clarification' && (
             <ClarificationForm
               questions={questions}
               onSubmit={handleAnswersSubmit}
               onBack={handleBack}
-              isLoading={isLoading}
-              isSuggesting={isSuggesting}
-              onSuggestAnswers={handleSuggestAnswers}
             />
           )}
-          {phase === "running" && (
-            <ProgressBar
-              progress={progress ?? FALLBACK_PROGRESS}
-              onComplete={doc ? () => setPhase("output") : undefined}
-            />
+          {phase === 'running' && (
+            <ProgressBar progress={progress} onComplete={handleRunComplete} />
           )}
-          {phase === "output" && <DocOutput doc={doc} onReset={handleReset} />}
+          {phase === 'output' && <DocOutput doc={doc} onReset={handleReset} />}
         </main>
       </div>
 
