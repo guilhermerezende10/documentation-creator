@@ -49,7 +49,7 @@ function scrollToHeading(id: string) {
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-export function DocOutput({ doc, onReset }: DocOutputProps) {
+export function DocOutput({ doc, onReset, onToast }: DocOutputProps) {
   const tabs = useMemo(() => {
     if (!doc) return [] as { id: string; label: string; markdown: string }[];
     const sectionTabs = doc.sections.map((s, i) => ({
@@ -141,13 +141,23 @@ export function DocOutput({ doc, onReset }: DocOutputProps) {
       : '';
 
   const handleCopy = () => {
-    if (doc) void copyMarkdown(doc);
+    if (!doc) return;
+    void copyMarkdown(doc).then(
+      () => onToast?.('Copied to clipboard'),
+      () => onToast?.('Copy failed'),
+    );
   };
   const handleDownload = () => {
-    if (doc) downloadMarkdown(doc);
+    if (!doc) return;
+    downloadMarkdown(doc);
+    onToast?.('Downloaded README.md');
   };
   const handleDownloadZip = () => {
-    if (doc) void downloadZip(doc);
+    if (!doc) return;
+    void downloadZip(doc).then(
+      () => onToast?.('Downloaded documentation.zip'),
+      () => onToast?.('ZIP download failed'),
+    );
   };
 
   return (

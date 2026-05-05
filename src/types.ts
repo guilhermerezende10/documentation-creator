@@ -60,6 +60,7 @@ export interface ClarificationFormProps {
 export interface DocOutputProps {
   doc: GeneratedDoc | null;
   onReset: () => void;
+  onToast?: (message: string) => void;
 }
 
 export interface ProgressBarProps {

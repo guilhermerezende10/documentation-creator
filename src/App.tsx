@@ -5,6 +5,8 @@ import { ProgressBar } from "./components/ProgressBar";
 import { DocOutput } from "./components/DocOutput";
 import { useDocGenerator } from "./hooks/useDocGenerator";
 import { useLLMStatus } from "./hooks/useLLMStatus";
+import { useToasts } from "./hooks/useToasts";
+import { ToastList } from "./components/ToastList";
 import type {
   Phase,
   InputData,
@@ -39,6 +41,7 @@ function App() {
     [],
   );
   const llmStatus = useLLMStatus(llmConfig);
+  const { toasts, toast, dismiss } = useToasts();
   const isOffline = llmStatus === "offline";
   const isChecking = llmStatus === "unknown";
   const statusLabel = isOffline ? "OFFLINE" : isChecking ? "CHECKING" : "READY";
@@ -154,11 +157,13 @@ function App() {
               onComplete={doc ? () => setPhase("output") : undefined}
             />
           )}
-          {phase === "output" && <DocOutput doc={doc} onReset={handleReset} />}
+          {phase === "output" && (
+            <DocOutput doc={doc} onReset={handleReset} onToast={toast} />
+          )}
         </main>
       </div>
 
-      <div className="toast-wrap" id="toasts" />
+      <ToastList toasts={toasts} onDismiss={dismiss} />
     </>
   );
 }
