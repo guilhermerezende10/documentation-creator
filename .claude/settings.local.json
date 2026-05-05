@@ -22,7 +22,13 @@
       "Bash(winget install *)",
       "Bash(/c/Program Files \\(x86\\)/cloudflared/cloudflared.exe tunnel *)",
       "Bash(/c/Users/rafae/AppData/Local/Microsoft/WinGet/Packages/Cloudflare.cloudflared_Microsoft.Winget.Source_8wekyb3d8bbwe/cloudflared.exe tunnel *)",
-      "Bash(curl *)"
+      "Bash(curl *)",
+      "Bash(git push *)",
+      "Bash(where ollama *)",
+      "Bash(ollama --version)",
+      "Bash(ollama list *)",
+      "Bash(ollama pull *)",
+      "Bash(npm test *)"
     ]
   }
 }
