@@ -4,24 +4,11 @@ import type { FileInputProps, InputMode } from '../types';
 
 const GITHUB_URL = /^https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/?$/i;
 
-export function FileInput({
-  onSubmit,
-  isLoading = false,
-  initialDraft,
-  onDraftChange,
-}: FileInputProps) {
-  const [tab, setTab] = useState<InputMode>(initialDraft?.mode ?? 'paste');
-  const [code, setCode] = useState(initialDraft?.code ?? '');
-  const [url, setUrl] = useState(initialDraft?.url ?? '');
+export function FileInput({ onSubmit, isLoading = false }: FileInputProps) {
+  const [tab, setTab] = useState<InputMode>('paste');
+  const [code, setCode] = useState('');
+  const [url, setUrl] = useState('');
   const [urlTouched, setUrlTouched] = useState(false);
-
-  const onDraftChangeRef = useRef(onDraftChange);
-  useEffect(() => {
-    onDraftChangeRef.current = onDraftChange;
-  }, [onDraftChange]);
-  useEffect(() => {
-    onDraftChangeRef.current?.({ mode: tab, code, url });
-  }, [tab, code, url]);
 
   const trimmedUrl = url.trim();
   const urlValid = GITHUB_URL.test(trimmedUrl);

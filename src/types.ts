@@ -43,17 +43,9 @@ export interface Progress {
   percent: number;
 }
 
-export interface FileInputDraft {
-  mode: InputMode;
-  code: string;
-  url: string;
-}
-
 export interface FileInputProps {
   onSubmit: (data: InputData) => void;
   isLoading?: boolean;
-  initialDraft?: FileInputDraft;
-  onDraftChange?: (draft: FileInputDraft) => void;
 }
 
 export interface ClarificationFormProps {
@@ -63,14 +55,11 @@ export interface ClarificationFormProps {
   isLoading?: boolean;
   isSuggesting?: boolean;
   onSuggestAnswers?: () => Promise<Record<string, string>>;
-  initialAnswers?: Record<string, string>;
-  onAnswersChange?: (answers: Record<string, string>) => void;
 }
 
 export interface DocOutputProps {
   doc: GeneratedDoc | null;
   onReset: () => void;
-  onToast?: (message: string) => void;
 }
 
 export interface ProgressBarProps {

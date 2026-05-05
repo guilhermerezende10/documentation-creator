@@ -20,16 +20,12 @@ export interface UseDocGeneratorResult {
   progress: Progress | null;
   questions: ClarificationQuestion[];
   doc: GeneratedDoc | null;
-  pendingInput: InputData | null;
   isLoading: boolean;
   isSuggesting: boolean;
   startGeneration: (data: InputData) => Promise<void>;
   submitAnswers: (answers: ClarificationAnswer[]) => Promise<void>;
   suggestAnswers: () => Promise<Record<string, string>>;
-  hydrate: (snapshot: {
-    questions: ClarificationQuestion[];
-    pendingInput: InputData;
-  }) => void;
+  cancel: () => void;
   reset: () => void;
 }
 
@@ -153,25 +149,16 @@ export function useDocGenerator(): UseDocGeneratorResult {
     setIsSuggesting(false);
   }
 
-  function hydrate(snapshot: {
-    questions: ClarificationQuestion[];
-    pendingInput: InputData;
-  }) {
-    setQuestions(snapshot.questions);
-    setPendingInput(snapshot.pendingInput);
-  }
-
   return {
     progress,
     questions,
     doc,
-    pendingInput,
     isLoading,
     isSuggesting,
     startGeneration,
     submitAnswers,
     suggestAnswers,
-    hydrate,
+    cancel,
     reset,
   };
 }
