@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ClarificationAnswer, ClarificationFormProps } from "../types";
 
 export function ClarificationForm({
@@ -8,8 +8,20 @@ export function ClarificationForm({
   isLoading = false,
   isSuggesting = false,
   onSuggestAnswers,
+  initialAnswers,
+  onAnswersChange,
 }: ClarificationFormProps) {
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [answers, setAnswers] = useState<Record<string, string>>(
+    initialAnswers ?? {},
+  );
+
+  const onAnswersChangeRef = useRef(onAnswersChange);
+  useEffect(() => {
+    onAnswersChangeRef.current = onAnswersChange;
+  }, [onAnswersChange]);
+  useEffect(() => {
+    onAnswersChangeRef.current?.(answers);
+  }, [answers]);
 
   const handleSuggest = async () => {
     if (!onSuggestAnswers || isSuggesting || isLoading) return;
