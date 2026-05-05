@@ -166,3 +166,7 @@ export async function fetchGitHubRepoDetailed(url: string): Promise<FetchResult>
   };
 }
 
+export async function fetchGitHubRepo(url: string): Promise<string> {
+  const result = await fetchGitHubRepoDetailed(url);
+  return result.text;
+}
