@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FileInput } from "./components/FileInput";
 import { ClarificationForm } from "./components/ClarificationForm";
 import { ProgressBar } from "./components/ProgressBar";
@@ -7,30 +7,68 @@ import { useDocGenerator } from "./hooks/useDocGenerator";
 import { useLLMStatus } from "./hooks/useLLMStatus";
 import { useToasts } from "./hooks/useToasts";
 import { ToastList } from "./components/ToastList";
+import { clearDraft, loadDraft, saveDraft } from "./utils/storage";
 import type {
   Phase,
   InputData,
   ClarificationAnswer,
+  FileInputDraft,
   Progress,
   LLMConfig,
 } from "./types";
 
 const FALLBACK_PROGRESS: Progress = { step: "Working", percent: 0 };
+const EMPTY_INPUT_DRAFT: FileInputDraft = { mode: "paste", code: "", url: "" };
 
 function App() {
-  const [phase, setPhase] = useState<Phase>("input");
+  const restored = useRef(loadDraft());
+  const [phase, setPhase] = useState<Phase>(restored.current?.phase ?? "input");
   const [error, setError] = useState<string | null>(null);
+  const [inputDraft, setInputDraft] = useState<FileInputDraft>(() =>
+    restored.current
+      ? {
+          mode: restored.current.inputMode,
+          code: restored.current.code,
+          url: restored.current.url,
+        }
+      : EMPTY_INPUT_DRAFT,
+  );
+  const [answers, setAnswers] = useState<Record<string, string>>(
+    () => restored.current?.answers ?? {},
+  );
   const {
     progress,
     questions,
     doc,
+    pendingInput,
     isLoading,
     isSuggesting,
     startGeneration,
     submitAnswers,
     suggestAnswers,
+    hydrate,
     reset,
   } = useDocGenerator();
+
+  useEffect(() => {
+    const snapshot = restored.current;
+    if (!snapshot) return;
+    if (
+      snapshot.phase === "clarification" &&
+      snapshot.questions.length > 0 &&
+      snapshot.pendingInput
+    ) {
+      hydrate({
+        questions: snapshot.questions,
+        pendingInput: snapshot.pendingInput,
+      });
+    } else if (snapshot.phase === "clarification") {
+      // Incomplete clarification snapshot — fall back to input phase.
+      setPhase("input");
+    }
+    // Mark restoration consumed so subsequent renders persist new state instead.
+    restored.current = null;
+  }, [hydrate]);
 
   const llmConfig = useMemo<LLMConfig>(
     () => ({
@@ -49,6 +87,7 @@ function App() {
   const handleInputSubmit = async (data: InputData) => {
     if (isLoading) return;
     setError(null);
+    setAnswers({});
     try {
       await startGeneration(data);
       setPhase("clarification");
@@ -84,6 +123,9 @@ function App() {
   const handleReset = () => {
     reset();
     setError(null);
+    setAnswers({});
+    setInputDraft(EMPTY_INPUT_DRAFT);
+    clearDraft();
     setPhase("input");
   };
 
@@ -92,6 +134,24 @@ function App() {
     const t = setTimeout(() => setPhase("output"), 700);
     return () => clearTimeout(t);
   }, [doc]);
+
+  useEffect(() => {
+    if (phase === "output") {
+      clearDraft();
+      return;
+    }
+    if (phase !== "input" && phase !== "clarification") return;
+    saveDraft({
+      version: 1,
+      phase,
+      inputMode: inputDraft.mode,
+      code: inputDraft.code,
+      url: inputDraft.url,
+      questions: phase === "clarification" ? questions : [],
+      answers: phase === "clarification" ? answers : {},
+      pendingInput: phase === "clarification" ? pendingInput : null,
+    });
+  }, [phase, inputDraft, questions, answers, pendingInput]);
 
   const handleBack = () => {
     setPhase("input");
@@ -139,7 +199,12 @@ function App() {
             </div>
           )}
           {phase === "input" && (
-            <FileInput onSubmit={handleInputSubmit} isLoading={isLoading} />
+            <FileInput
+              onSubmit={handleInputSubmit}
+              isLoading={isLoading}
+              initialDraft={inputDraft}
+              onDraftChange={setInputDraft}
+            />
           )}
           {phase === "clarification" && (
             <ClarificationForm
@@ -149,6 +214,8 @@ function App() {
               isLoading={isLoading}
               isSuggesting={isSuggesting}
               onSuggestAnswers={handleSuggestAnswers}
+              initialAnswers={answers}
+              onAnswersChange={setAnswers}
             />
           )}
           {phase === "running" && (
