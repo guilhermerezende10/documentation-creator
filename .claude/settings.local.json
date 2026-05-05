@@ -3,26 +3,10 @@
     "allow": [
       "Bash(npm install *)",
       "Bash(npx tsc *)",
-      "Bash(git add *)",
-      "Bash(git commit -m ' *)",
-      "Bash(gh pr *)",
-      "PowerShell(gh *)",
-      "Bash(git checkout *)",
-      "Bash(npm run *)",
       "Bash(git commit *)",
-      "PowerShell(& \"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" issue view 10 --repo guilhermerezende10/documentation-creator)",
-      "Bash(git ls-remote *)",
-      "Bash(gh issue *)",
-      "WebFetch(domain:github.com)",
-      "WebFetch(domain:api.github.com)",
-      "Bash(git fetch *)",
-      "Bash(git pull *)",
-      "Bash(gh repo *)",
-      "Bash(gh label *)",
-      "Bash(winget install *)",
-      "Bash(/c/Program Files \\(x86\\)/cloudflared/cloudflared.exe tunnel *)",
-      "Bash(/c/Users/rafae/AppData/Local/Microsoft/WinGet/Packages/Cloudflare.cloudflared_Microsoft.Winget.Source_8wekyb3d8bbwe/cloudflared.exe tunnel *)",
-      "Bash(curl *)"
+      "Bash(git push *)",
+      "Bash(git add *)",
+      "Bash(gh pr *)"
     ]
   }
 }

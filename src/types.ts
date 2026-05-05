@@ -1,13 +1,11 @@
 export type Phase = 'input' | 'clarification' | 'running' | 'output';
 
-export type LLMProvider = 'ollama';
-
-export type LLMStatus = 'unknown' | 'online' | 'offline';
+export type LLMProvider = 'ollama' | 'claude';
 
 export interface LLMConfig {
   provider: LLMProvider;
   ollamaModel?: string;
-  ollamaBaseUrl?: string;
+  claudeApiKey?: string;
 }
 
 export type InputMode = 'paste' | 'link';
@@ -45,16 +43,12 @@ export interface Progress {
 
 export interface FileInputProps {
   onSubmit: (data: InputData) => void;
-  isLoading?: boolean;
 }
 
 export interface ClarificationFormProps {
   questions: ClarificationQuestion[];
   onSubmit: (answers: ClarificationAnswer[]) => void;
   onBack?: () => void;
-  isLoading?: boolean;
-  isSuggesting?: boolean;
-  onSuggestAnswers?: () => Promise<Record<string, string>>;
 }
 
 export interface DocOutputProps {
