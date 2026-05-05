@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ClarificationAnswer, ClarificationFormProps } from "../types";
+import { getModelLabel } from "../utils/modelLabel";
 
 export function ClarificationForm({
   questions,
@@ -8,8 +9,20 @@ export function ClarificationForm({
   isLoading = false,
   isSuggesting = false,
   onSuggestAnswers,
+  initialAnswers,
+  onAnswersChange,
 }: ClarificationFormProps) {
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [answers, setAnswers] = useState<Record<string, string>>(
+    initialAnswers ?? {},
+  );
+
+  const onAnswersChangeRef = useRef(onAnswersChange);
+  useEffect(() => {
+    onAnswersChangeRef.current = onAnswersChange;
+  }, [onAnswersChange]);
+  useEffect(() => {
+    onAnswersChangeRef.current?.(answers);
+  }, [answers]);
 
   const handleSuggest = async () => {
     if (!onSuggestAnswers || isSuggesting || isLoading) return;
@@ -77,11 +90,7 @@ export function ClarificationForm({
           <div className="rail-foot">
             <div>
               <span>MODEL</span>
-              <span className="v">LLAMA 3.1</span>
-            </div>
-            <div>
-              <span>STATUS</span>
-              <span className="v ok">READY</span>
+              <span className="v">{getModelLabel()}</span>
             </div>
           </div>
 
