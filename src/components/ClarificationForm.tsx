@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { ClarificationAnswer, ClarificationFormProps } from "../types";
+import { getModelLabel } from "../utils/modelLabel";
 
 export function ClarificationForm({
   questions,
@@ -89,7 +90,7 @@ export function ClarificationForm({
           <div className="rail-foot">
             <div>
               <span>MODEL</span>
-              <span className="v">LLAMA 3.1</span>
+              <span className="v">{getModelLabel()}</span>
             </div>
           </div>
 

@@ -8,6 +8,7 @@ import { useLLMStatus } from "./hooks/useLLMStatus";
 import { useToasts } from "./hooks/useToasts";
 import { ToastList } from "./components/ToastList";
 import { clearDraft, loadDraft, saveDraft } from "./utils/storage";
+import { getModelLabel } from "./utils/modelLabel";
 import type {
   Phase,
   InputData,
@@ -174,7 +175,7 @@ function App() {
                 (isOffline ? " bad" : isChecking ? " pending" : "")
               }
             />
-            LLAMA 3.1 / {statusLabel}
+            {getModelLabel()} / {statusLabel}
           </span>
           <span className="ok">v1.0.4</span>
         </div>
