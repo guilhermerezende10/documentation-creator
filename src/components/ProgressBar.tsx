@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import type { ProgressBarProps } from "../types";
-import { getModelLabel } from "../utils/modelLabel";
 
 const ROTATING_MESSAGES = [
   "Reading source structure",
@@ -83,7 +82,7 @@ export function ProgressBar({ progress, onComplete }: ProgressBarProps) {
                 ELAPSED <span className="v">{formatElapsed(elapsed)}</span>
               </span>
               <span>
-                MODEL <span className="v">{getModelLabel()}</span>
+                MODEL <span className="v">LLAMA 3.1</span>
               </span>
             </div>
           </div>
