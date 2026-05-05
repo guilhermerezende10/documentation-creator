@@ -79,10 +79,6 @@ export function ClarificationForm({
               <span>MODEL</span>
               <span className="v">LLAMA 3.1</span>
             </div>
-            <div>
-              <span>STATUS</span>
-              <span className="v ok">READY</span>
-            </div>
           </div>
 
           {questions.length > 0 && onSuggestAnswers && (
