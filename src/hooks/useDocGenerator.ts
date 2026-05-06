@@ -14,6 +14,7 @@ import {
   buildAnswerSuggestionPrompt,
   buildClarificationPrompt,
   buildDocPrompt,
+  buildStricterRetryPrompt,
 } from '../utils/promptBuilder';
 
 export interface UseDocGeneratorResult {
@@ -32,6 +33,31 @@ export interface UseDocGeneratorResult {
   }) => void;
   cancel: () => void;
   reset: () => void;
+}
+
+async function callAndParseWithRetry<T>(
+  prompt: string,
+  config: LLMConfig,
+  parser: (raw: string) => T,
+  signal: AbortSignal,
+  label: string,
+): Promise<T> {
+  const raw = await callLLM(prompt, config, { signal });
+  try {
+    return parser(raw);
+  } catch (firstErr) {
+    const msg = firstErr instanceof Error ? firstErr.message : String(firstErr);
+    console.info(`[docgen] ${label} parse failed, retrying once with stricter prompt:`, msg);
+    const stricter = buildStricterRetryPrompt(prompt);
+    const retryRaw = await callLLM(stricter, config, { signal });
+    try {
+      return parser(retryRaw);
+    } catch (secondErr) {
+      const retryMsg = secondErr instanceof Error ? secondErr.message : String(secondErr);
+      console.info(`[docgen] ${label} parse failed again after retry:`, retryMsg);
+      throw firstErr;
+    }
+  }
 }
 
 export function useDocGenerator(config: LLMConfig): UseDocGeneratorResult {
@@ -90,8 +116,14 @@ export function useDocGenerator(config: LLMConfig): UseDocGeneratorResult {
       setProgress({ step: 'Analyzing code', percent: 35 });
 
       const prompt = buildClarificationPrompt(resolved);
-      const raw = await callLLM(prompt, config, { signal });
-      setQuestions(parseQuestions(raw));
+      const parsed = await callAndParseWithRetry(
+        prompt,
+        config,
+        parseQuestions,
+        signal,
+        'clarification questions',
+      );
+      setQuestions(parsed);
       setProgress({ step: 'Awaiting clarifications', percent: 50 });
     } finally {
       setIsLoading(false);
@@ -123,8 +155,13 @@ export function useDocGenerator(config: LLMConfig): UseDocGeneratorResult {
     try {
       setIsSuggesting(true);
       const prompt = buildAnswerSuggestionPrompt(pendingInput, questions);
-      const raw = await callLLM(prompt, config, { signal });
-      return parseSuggestions(raw);
+      return await callAndParseWithRetry(
+        prompt,
+        config,
+        parseSuggestions,
+        signal,
+        'answer suggestions',
+      );
     } finally {
       setIsSuggesting(false);
       endRequest(signal);

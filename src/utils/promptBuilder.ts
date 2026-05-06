@@ -127,6 +127,15 @@ export function buildAnswerSuggestionPrompt(
   ].join('\n');
 }
 
+export function buildStricterRetryPrompt(originalPrompt: string): string {
+  return [
+    originalPrompt,
+    '',
+    'IMPORTANT — Your previous reply was not valid JSON.',
+    'Reply with ONLY a JSON array. No prose, no markdown fences, no commentary before or after.',
+  ].join('\n');
+}
+
 export function buildDocPrompt(input: InputData, answers: ClarificationAnswer[]): string {
   const answerLines = answers.length
     ? answers.map(a => `- ${a.questionId}: ${a.answer}`).join('\n')
