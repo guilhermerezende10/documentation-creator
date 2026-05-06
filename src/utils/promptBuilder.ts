@@ -71,6 +71,14 @@ function describeSource(input: InputData): string {
   return lines.join('\n');
 }
 
+export function withStrictJsonRetryHint(prompt: string): string {
+  return [
+    prompt,
+    '',
+    'NOTE: Your previous reply was not valid JSON. Reply with ONLY a JSON array — no prose, no fences.',
+  ].join('\n');
+}
+
 export function buildClarificationPrompt(input: InputData): string {
   return [
     'You are a senior technical writer preparing to document the codebase below.',

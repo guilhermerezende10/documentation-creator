@@ -14,6 +14,7 @@ import {
   buildAnswerSuggestionPrompt,
   buildClarificationPrompt,
   buildDocPrompt,
+  withStrictJsonRetryHint,
 } from '../utils/promptBuilder';
 
 export interface UseDocGeneratorResult {
@@ -56,6 +57,29 @@ export function useDocGenerator(config: LLMConfig): UseDocGeneratorResult {
     }
   }
 
+  async function callAndParse<T>(
+    prompt: string,
+    signal: AbortSignal,
+    parse: (raw: string) => T,
+    label: string,
+  ): Promise<T> {
+    const raw = await callLLM(prompt, config, { signal });
+    try {
+      return parse(raw);
+    } catch (firstErr) {
+      console.info(
+        `[docgen] ${label} parse failed; retrying once with stricter prompt`,
+        firstErr,
+      );
+      const retryRaw = await callLLM(withStrictJsonRetryHint(prompt), config, { signal });
+      try {
+        return parse(retryRaw);
+      } catch {
+        throw firstErr;
+      }
+    }
+  }
+
   async function startGeneration(data: InputData) {
     const signal = beginRequest();
     try {
@@ -90,8 +114,8 @@ export function useDocGenerator(config: LLMConfig): UseDocGeneratorResult {
       setProgress({ step: 'Analyzing code', percent: 35 });
 
       const prompt = buildClarificationPrompt(resolved);
-      const raw = await callLLM(prompt, config, { signal });
-      setQuestions(parseQuestions(raw));
+      const parsedQuestions = await callAndParse(prompt, signal, parseQuestions, 'questions');
+      setQuestions(parsedQuestions);
       setProgress({ step: 'Awaiting clarifications', percent: 50 });
     } finally {
       setIsLoading(false);
@@ -123,8 +147,7 @@ export function useDocGenerator(config: LLMConfig): UseDocGeneratorResult {
     try {
       setIsSuggesting(true);
       const prompt = buildAnswerSuggestionPrompt(pendingInput, questions);
-      const raw = await callLLM(prompt, config, { signal });
-      return parseSuggestions(raw);
+      return await callAndParse(prompt, signal, parseSuggestions, 'suggestions');
     } finally {
       setIsSuggesting(false);
       endRequest(signal);
