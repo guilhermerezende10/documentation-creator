@@ -1,13 +1,27 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { UIEventHandler } from 'react';
 import type { FileInputProps, InputMode } from '../types';
 
 const GITHUB_URL = /^https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/?$/i;
 
-export function FileInput({ onSubmit }: FileInputProps) {
-  const [tab, setTab] = useState<InputMode>('paste');
-  const [code, setCode] = useState('');
-  const [url, setUrl] = useState('');
+export function FileInput({
+  onSubmit,
+  isLoading = false,
+  initialDraft,
+  onDraftChange,
+}: FileInputProps) {
+  const [tab, setTab] = useState<InputMode>(initialDraft?.mode ?? 'paste');
+  const [code, setCode] = useState(initialDraft?.code ?? '');
+  const [url, setUrl] = useState(initialDraft?.url ?? '');
   const [urlTouched, setUrlTouched] = useState(false);
+
+  const onDraftChangeRef = useRef(onDraftChange);
+  useEffect(() => {
+    onDraftChangeRef.current = onDraftChange;
+  }, [onDraftChange]);
+  useEffect(() => {
+    onDraftChangeRef.current?.({ mode: tab, code, url });
+  }, [tab, code, url]);
 
   const trimmedUrl = url.trim();
   const urlValid = GITHUB_URL.test(trimmedUrl);
@@ -20,8 +34,31 @@ export function FileInput({ onSubmit }: FileInputProps) {
     return Array.from({ length: lineCount }, (_, i) => String(i + 1)).join('\n');
   }, [code]);
 
+  const gutterRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const ta = textareaRef.current;
+    const gutter = gutterRef.current;
+    if (!ta || !gutter) return;
+    const update = () => {
+      const scrollbarHeight = ta.offsetHeight - ta.clientHeight;
+      gutter.style.paddingBottom = `${16 + scrollbarHeight}px`;
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(ta);
+    return () => ro.disconnect();
+  }, [code]);
+
+  const handleGutterSync: UIEventHandler<HTMLTextAreaElement> = (e) => {
+    if (gutterRef.current) {
+      gutterRef.current.scrollTop = e.currentTarget.scrollTop;
+    }
+  };
+
   const handleSubmit = () => {
-    if (!ready) return;
+    if (!ready || isLoading) return;
     if (tab === 'paste') {
       onSubmit({ mode: 'paste', code: code.trim() });
     } else {
@@ -74,13 +111,18 @@ export function FileInput({ onSubmit }: FileInputProps) {
 
         {tab === 'paste' ? (
           <div className="code-area">
-            <div className="gutter">{gutter}</div>
+            <div className="gutter" ref={gutterRef} aria-hidden="true">
+              <div className="gutter-inner">{gutter}</div>
+            </div>
             <textarea
+              ref={textareaRef}
               className="code-input"
               placeholder="// paste your code here..."
               value={code}
               onChange={(e) => setCode(e.target.value)}
+              onScroll={handleGutterSync}
               spellCheck={false}
+              wrap="off"
             />
           </div>
         ) : (
@@ -130,10 +172,18 @@ export function FileInput({ onSubmit }: FileInputProps) {
       <button
         type="button"
         className="cta"
-        disabled={!ready}
+        disabled={!ready || isLoading}
         onClick={handleSubmit}
+        aria-busy={isLoading}
       >
-        ANALYZE → CONTINUE
+        {isLoading ? (
+          <>
+            <span className="spinner" aria-hidden="true" />
+            ANALYZING…
+          </>
+        ) : (
+          'ANALYZE → CONTINUE'
+        )}
       </button>
 
       <div className="micro">
