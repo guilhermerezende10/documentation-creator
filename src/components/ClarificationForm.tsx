@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { KeyboardEvent } from "react";
 import type { ClarificationAnswer, ClarificationFormProps } from "../types";
 import { getModelLabel } from "../utils/modelLabel";
 
@@ -56,6 +57,13 @@ export function ClarificationForm({
       answer: answers[q.id] ?? "",
     }));
     onSubmit(payload);
+  };
+
+  const handleSubmitKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      handleSubmit();
+    }
   };
 
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -137,6 +145,7 @@ export function ClarificationForm({
                     placeholder="Your answer..."
                     value={answers[q.id] ?? ""}
                     onChange={(e) => handleChange(q.id, e.target.value)}
+                    onKeyDown={handleSubmitKey}
                   />
                 </div>
               </div>

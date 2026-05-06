@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { UIEventHandler } from 'react';
+import type { KeyboardEvent, UIEventHandler } from 'react';
 import type { FileInputProps, InputMode } from '../types';
 
 const GITHUB_URL = /^https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/?$/i;
@@ -66,6 +66,13 @@ export function FileInput({
     }
   };
 
+  const handleSubmitKey = (e: KeyboardEvent<HTMLElement>) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
   return (
     <div className="phase-enter">
       <nav className="crumb">
@@ -120,6 +127,7 @@ export function FileInput({
               placeholder="// paste your code here..."
               value={code}
               onChange={(e) => setCode(e.target.value)}
+              onKeyDown={handleSubmitKey}
               onScroll={handleGutterSync}
               spellCheck={false}
               wrap="off"
@@ -136,6 +144,7 @@ export function FileInput({
               placeholder="https://github.com/owner/repo"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
+              onKeyDown={handleSubmitKey}
               onBlur={() => setUrlTouched(true)}
               spellCheck={false}
             />
