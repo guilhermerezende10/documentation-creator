@@ -30,18 +30,11 @@ export interface UseDocGeneratorResult {
     questions: ClarificationQuestion[];
     pendingInput: InputData;
   }) => void;
+  cancel: () => void;
   reset: () => void;
 }
 
-function getConfig(): LLMConfig {
-  return {
-    provider: import.meta.env.VITE_LLM_PROVIDER || 'ollama',
-    ollamaModel: import.meta.env.VITE_OLLAMA_MODEL,
-    ollamaBaseUrl: import.meta.env.VITE_OLLAMA_BASE_URL,
-  };
-}
-
-export function useDocGenerator(): UseDocGeneratorResult {
+export function useDocGenerator(config: LLMConfig): UseDocGeneratorResult {
   const [progress, setProgress] = useState<Progress | null>(null);
   const [questions, setQuestions] = useState<ClarificationQuestion[]>([]);
   const [doc, setDoc] = useState<GeneratedDoc | null>(null);
@@ -97,7 +90,7 @@ export function useDocGenerator(): UseDocGeneratorResult {
       setProgress({ step: 'Analyzing code', percent: 35 });
 
       const prompt = buildClarificationPrompt(resolved);
-      const raw = await callLLM(prompt, getConfig(), { signal });
+      const raw = await callLLM(prompt, config, { signal });
       setQuestions(parseQuestions(raw));
       setProgress({ step: 'Awaiting clarifications', percent: 50 });
     } finally {
@@ -113,7 +106,7 @@ export function useDocGenerator(): UseDocGeneratorResult {
       setIsLoading(true);
       setProgress({ step: 'Generating documentation', percent: 70 });
       const prompt = buildDocPrompt(pendingInput, answers);
-      const raw = await callLLM(prompt, getConfig(), { signal });
+      const raw = await callLLM(prompt, config, { signal });
       setProgress({ step: 'Formatting output', percent: 90 });
       setDoc(parseDoc(raw));
       setProgress({ step: 'Done', percent: 100 });
@@ -130,7 +123,7 @@ export function useDocGenerator(): UseDocGeneratorResult {
     try {
       setIsSuggesting(true);
       const prompt = buildAnswerSuggestionPrompt(pendingInput, questions);
-      const raw = await callLLM(prompt, getConfig(), { signal });
+      const raw = await callLLM(prompt, config, { signal });
       return parseSuggestions(raw);
     } finally {
       setIsSuggesting(false);
@@ -172,6 +165,7 @@ export function useDocGenerator(): UseDocGeneratorResult {
     submitAnswers,
     suggestAnswers,
     hydrate,
+    cancel,
     reset,
   };
 }

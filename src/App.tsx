@@ -9,13 +9,13 @@ import { useToasts } from "./hooks/useToasts";
 import { ToastList } from "./components/ToastList";
 import { clearDraft, loadDraft, saveDraft } from "./utils/storage";
 import { getModelLabel } from "./utils/modelLabel";
+import { getLLMConfig } from "./services/config";
 import type {
   Phase,
   InputData,
   ClarificationAnswer,
   FileInputDraft,
   Progress,
-  LLMConfig,
 } from "./types";
 
 const FALLBACK_PROGRESS: Progress = { step: "Working", percent: 0 };
@@ -37,6 +37,7 @@ function App() {
   const [answers, setAnswers] = useState<Record<string, string>>(
     () => restored.current?.answers ?? {},
   );
+  const llmConfig = useMemo(() => getLLMConfig(), []);
   const {
     progress,
     questions,
@@ -49,7 +50,7 @@ function App() {
     suggestAnswers,
     hydrate,
     reset,
-  } = useDocGenerator();
+  } = useDocGenerator(llmConfig);
 
   useEffect(() => {
     const snapshot = restored.current;
@@ -71,14 +72,6 @@ function App() {
     restored.current = null;
   }, [hydrate]);
 
-  const llmConfig = useMemo<LLMConfig>(
-    () => ({
-      provider: import.meta.env.VITE_LLM_PROVIDER || "ollama",
-      ollamaModel: import.meta.env.VITE_OLLAMA_MODEL,
-      ollamaBaseUrl: import.meta.env.VITE_OLLAMA_BASE_URL,
-    }),
-    [],
-  );
   const llmStatus = useLLMStatus(llmConfig);
   const { toasts, toast, dismiss } = useToasts();
   const isOffline = llmStatus === "offline";
