@@ -1,5 +1,6 @@
 # docgen — AI-Powered Documentation Generator
 
+[![CI](https://github.com/guilhermerezende10/documentation-creator/actions/workflows/ci.yml/badge.svg)](https://github.com/guilhermerezende10/documentation-creator/actions/workflows/ci.yml)
 [![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
 [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
