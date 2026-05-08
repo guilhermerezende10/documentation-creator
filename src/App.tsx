@@ -177,18 +177,7 @@ function App() {
       <div className="app">
         <main className="shell">
           {error && (
-            <div
-              role="alert"
-              style={{
-                padding: "12px 16px",
-                marginBottom: 16,
-                border: "1px solid #c54",
-                color: "#f99",
-                background: "rgba(200, 60, 60, 0.08)",
-                fontFamily: "monospace",
-                fontSize: 13,
-              }}
-            >
+            <div role="alert" className="error-banner">
               ERROR — {error}
             </div>
           )}
