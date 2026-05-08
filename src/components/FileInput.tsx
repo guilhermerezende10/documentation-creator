@@ -124,6 +124,7 @@ export function FileInput({
             <textarea
               ref={textareaRef}
               className="code-input"
+              aria-label="Source code"
               placeholder="// paste your code here..."
               value={code}
               onChange={(e) => setCode(e.target.value)}
@@ -140,6 +141,7 @@ export function FileInput({
             <input
               type="url"
               className="text-input"
+              aria-label="GitHub repository URL"
               style={{ maxWidth: 520, width: '90%' }}
               placeholder="https://github.com/owner/repo"
               value={url}
