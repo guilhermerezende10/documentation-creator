@@ -13,9 +13,15 @@ export type Language =
   | 'PHP'
   | 'C#'
   | 'C/C++'
+  | 'HTML'
+  | 'CSS'
+  | 'JSON'
+  | 'YAML'
+  | 'SQL'
   | 'unknown';
 
 export function detectLanguage(code: string): Language {
+  // Extension markers (highest priority)
   if (/=== [^\n]*\.tsx?\b/.test(code) || /=== tsconfig\.json/.test(code)) return 'TypeScript';
   if (/=== [^\n]*\.jsx?\b/.test(code) || /=== package\.json/.test(code)) return 'JavaScript';
   if (/=== [^\n]*\.py\b/.test(code) || /=== pyproject\.toml/.test(code) || /=== setup\.py/.test(code)) return 'Python';
@@ -26,13 +32,26 @@ export function detectLanguage(code: string): Language {
   if (/=== [^\n]*\.php\b/.test(code)) return 'PHP';
   if (/=== [^\n]*\.cs\b/.test(code)) return 'C#';
   if (/=== [^\n]*\.[ch](pp)?\b/.test(code)) return 'C/C++';
+  if (/=== [^\n]*\.html?\b/.test(code)) return 'HTML';
+  if (/=== [^\n]*\.(css|scss|sass)\b/.test(code)) return 'CSS';
+  if (/=== [^\n]*\.json\b/.test(code)) return 'JSON';
+  if (/=== [^\n]*\.(yaml|yml)\b/.test(code)) return 'YAML';
+  if (/=== [^\n]*\.(toml)\b/.test(code)) return 'YAML';
+  if (/=== [^\n]*\.sql\b/.test(code)) return 'SQL';
 
+  // Content heuristics
   if (/\binterface\s+\w+\s*\{/.test(code) || /:\s*[A-Z]\w*(\[\])?\s*[,)=]/.test(code)) return 'TypeScript';
   if (/^\s*(import|from)\s+[\w.]+\s+import\b/m.test(code) || /^\s*def\s+\w+\s*\(/m.test(code)) return 'Python';
   if (/^\s*package\s+\w+/m.test(code) && /^\s*func\s+\w+\s*\(/m.test(code)) return 'Go';
   if (/^\s*(fn\s+\w+|impl\s+\w+|struct\s+\w+\s*\{|use\s+\w+::)/m.test(code)) return 'Rust';
   if (/^\s*public\s+(class|interface)\s+\w+/m.test(code)) return 'Java';
   if (/^\s*(import\s+|export\s+(default|function|const|class))/m.test(code) || /\brequire\s*\(/.test(code)) return 'JavaScript';
+  if (/^\s*\{[^}]*"[^"]*"\s*:/.test(code) || /^\s*\[[^\]]*\]/.test(code)) return 'JSON';
+  if (/^\s*\w+\s*:\s*.+/m.test(code) && /^\s*-\s+/.test(code)) return 'YAML';
+  if (/^\s*\[.*\]\s*$/m.test(code) && /^\s*\w+\s*=/.test(code)) return 'YAML';
+  if (/^\s*(SELECT|INSERT|UPDATE|DELETE|CREATE|DROP|ALTER)\b/im.test(code)) return 'SQL';
+  if (/\{[^}]*(background|color|padding|margin|font|display|width|height)\b/.test(code)) return 'CSS';
+  if (/<(html|head|body|div|span|p|a|button|form|input|script|style)[\s>]/i.test(code)) return 'HTML';
 
   return 'unknown';
 }
